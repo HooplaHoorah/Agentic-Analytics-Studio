@@ -77,6 +77,12 @@ class PipelineLeakageAgent(AgentPlay):
         else:
             at_risk_df = data.head(5)
 
+        # Make a copy to avoid SettingWithCopyWarning on the slice
+        at_risk_df = at_risk_df.copy()
+        for col in ("close_date", "last_touch_date"):
+            if col in at_risk_df.columns:
+                at_risk_df[col] = at_risk_df[col].astype(str)
+
         # Select a subset of fields to include in the result
         cols = [c for c in ["opportunity_id", "stage", "owner", "stage_age", "amount", "close_date"] if c in at_risk_df.columns]
         at_risk_list = at_risk_df[cols].to_dict(orient="records")
