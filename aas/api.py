@@ -86,6 +86,10 @@ def run_play(play: str, req: RunRequest = RunRequest()):
         agent.params.update(req.params)
     else:
         agent.params = req.params
+
+    run_id = str(uuid4())
+    generated_at = datetime.now(timezone.utc).isoformat()
+
     result = agent.run()
 
     # Support both PlayResult (preferred) and raw dict (current)
@@ -95,6 +99,15 @@ def run_play(play: str, req: RunRequest = RunRequest()):
         payload = result
     else:
         payload = {"result": str(result)}
+
+    # Add run metadata to the top-level response (keeps $res.actions working)
+    if isinstance(payload, dict):
+        payload = {
+            "run_id": run_id,
+            "play": play,
+            "generated_at": generated_at,
+            **payload,
+        }
 
     return jsonable_encoder(payload, custom_encoder=CUSTOM_ENCODERS)
 
