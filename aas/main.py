@@ -56,7 +56,7 @@ def main() -> None:
     args = parser.parse_args()
 
     result = run_play(args.play)
-    print(json.dumps(result, indent=2))
+    print(json.dumps(result, indent=2, default=str))
 
 
 if __name__ == "__main__":
