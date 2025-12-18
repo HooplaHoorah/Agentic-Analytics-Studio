@@ -177,3 +177,18 @@ def approvals():
                 approvals.append(json.loads(line))
 
     return {"approvals": approvals[-50:]}  # last 50
+
+
+@app.get("/executions")
+def executions():
+    if not EXECUTIONS_FILE.exists():
+        return {"executions": []}
+
+    executions = []
+    with EXECUTIONS_FILE.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                executions.append(json.loads(line))
+
+    return {"executions": executions[-50:]}  # last 50

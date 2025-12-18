@@ -22,3 +22,4 @@ venv/
 
 # Data outputs
 data/
+*.jsonl
