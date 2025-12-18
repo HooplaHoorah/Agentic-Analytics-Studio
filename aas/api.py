@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 from .agents.pipeline_leakage import PipelineLeakageAgent
 from .agents.churn_rescue import ChurnRescueAgent
 from .agents.spend_anomaly import SpendAnomalyAgent
+from .executor import execute_actions
 
 # Optional: handle pandas.Timestamp cleanly if it ever leaks into responses
 try:
@@ -112,12 +113,22 @@ def run_play(play: str, req: RunRequest = RunRequest()):
     return jsonable_encoder(payload, custom_encoder=CUSTOM_ENCODERS)
 
 
+
+EXECUTIONS_FILE = APPROVALS_DIR / "executions.jsonl"
+
+
+def _append_execution_log(record: Dict[str, Any]) -> None:
+    APPROVALS_DIR.mkdir(parents=True, exist_ok=True)
+    with EXECUTIONS_FILE.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, default=str) + "\n")
+
+
 @app.post("/approve")
 def approve(req: ApproveRequest):
     approval_id = str(uuid4())
     ts = datetime.now(timezone.utc).isoformat()
 
-    # In MVP: record approvals (and later, actually execute via Slack/Salesforce clients)
+    # 1) Log Approvals
     for action in req.actions:
         _append_approval_log(
             {
@@ -131,11 +142,25 @@ def approve(req: ApproveRequest):
             }
         )
 
+    # 2) Execute Actions
+    execution_results = execute_actions(req.actions, run_id=req.run_id)
+
+    # 3) Log Executions
+    for result in execution_results:
+        _append_execution_log({
+            "approval_id": approval_id,
+            "run_id": req.run_id,
+            "timestamp": ts,
+            **result
+        })
+
     return {
         "approval_id": approval_id,
         "approved_count": len(req.actions),
-        "message": "Approved actions recorded (execution is stubbed in this MVP).",
+        "executed_count": len(execution_results),
+        "execution_results": execution_results,
         "log_file": str(APPROVALS_FILE),
+        "executions_file": str(EXECUTIONS_FILE),
     }
 
 

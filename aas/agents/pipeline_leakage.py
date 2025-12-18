@@ -46,6 +46,7 @@ class PipelineLeakageAgent(AgentPlay):
             A dict with keys:
             * `at_risk_deals`: list of deals flagged for attention.
             * `stage_distribution`: distribution of deals by stage.
+            * `drivers_of_slowdown`: key insights into pipeline bottlenecks.
             * `narrative`: human‑readable summary of findings.
         """
         if data.empty:
@@ -55,72 +56,116 @@ class PipelineLeakageAgent(AgentPlay):
                 "narrative": "No data available."
             }
 
-        # Convert date columns to datetime for sorting; ignore errors
+        # Convert date columns for calculation
+        today = _dt.date.today()
         for col in ["close_date", "last_touch_date"]:
             if col in data.columns:
                 data[col] = pd.to_datetime(data[col], errors="coerce")
 
-        # Stage distribution
+        # 1) Calculate Risk Score (0-100) and Reasons
+        data["risk_score"] = 0.0
+        data["reasons"] = [[] for _ in range(len(data))]
+
+        if "stage_age" in data.columns:
+            # stage_age component: 1 point per day, capped at 40
+            age_points = (data["stage_age"].fillna(0)).clip(0, 40)
+            data["risk_score"] += age_points
+            for idx, age in data["stage_age"].items():
+                if age > 30:
+                    data.at[idx, "reasons"].append(f"Stalled in stage {int(age)} days")
+
+        if "last_touch_date" in data.columns:
+            # days since last touch component: 2 points per day over 7 days, max 30
+            days_since = (pd.Timestamp(today) - data["last_touch_date"]).dt.days.fillna(30)
+            touch_points = ((days_since - 7).clip(0) * 2).clip(0, 30)
+            data["risk_score"] += touch_points
+            for idx, d in days_since.items():
+                if d > 14:
+                    data.at[idx, "reasons"].append(f"No activity in {int(d)} days")
+
+        if "close_date" in data.columns:
+            # close date slipped component: 30 points
+            is_past = data["close_date"].dt.date < today
+            data.loc[is_past, "risk_score"] += 30
+            for idx, past in is_past.items():
+                if past:
+                    data.at[idx, "reasons"].append("Close date slipped")
+
+        data["risk_score"] = data["risk_score"].clip(0, 100)
+
+        # 2) Drivers of slowdown summary
+        drivers = {}
+        if "stage" in data.columns and "stage_age" in data.columns:
+            drivers["slowest_stages"] = data.groupby("stage")["stage_age"].mean().sort_values(ascending=False).head(3).to_dict()
+        
+        if "owner" in data.columns:
+            high_risk_df = data[data["risk_score"] > 50]
+            drivers["top_high_risk_owners"] = high_risk_df["owner"].value_counts().head(3).to_dict()
+
+        # 3) Stage distribution (existing)
         if "stage" in data.columns:
             stage_counts = data["stage"].value_counts().to_dict()
         else:
             stage_counts = {}
 
-        # Determine at‑risk deals: sort by stage age descending and then by upcoming close date
-        sort_cols = []
-        if "stage_age" in data.columns:
-            sort_cols.append("stage_age")
-        if "close_date" in data.columns:
-            sort_cols.append("close_date")
-        if sort_cols:
-            at_risk_df = data.sort_values(sort_cols, ascending=[False] * len(sort_cols)).head(5)
-        else:
-            at_risk_df = data.head(5)
-
-        # Make a copy to avoid SettingWithCopyWarning on the slice
-        at_risk_df = at_risk_df.copy()
-        for col in ("close_date", "last_touch_date"):
+        # 4) Select top 5 at-risk deals
+        at_risk_df = data.sort_values("risk_score", ascending=False).head(5).copy()
+        
+        # Convert dates to strings for JSON serialisation
+        for col in ["close_date", "last_touch_date"]:
             if col in at_risk_df.columns:
-                at_risk_df[col] = at_risk_df[col].astype(str)
+                at_risk_df[col] = at_risk_df[col].dt.strftime('%Y-%m-%d')
 
         # Select a subset of fields to include in the result
-        cols = [c for c in ["opportunity_id", "stage", "owner", "stage_age", "amount", "close_date"] if c in at_risk_df.columns]
+        cols = [c for c in ["opportunity_id", "stage", "owner", "stage_age", "amount", "close_date", "risk_score", "reasons"] if c in at_risk_df.columns]
         at_risk_list = at_risk_df[cols].to_dict(orient="records")
 
         narrative = (
-            f"Identified {len(at_risk_list)} deals at risk based on stage age "
-            f"and closing dates. Focus follow‑up on these opportunities to reduce leakage."
+            f"Identified {len(at_risk_list)} deals at risk based on scoring which factors in "
+            f"stage age, activity gaps, and close date slippage. "
+            f"Top drivers of slowdown include stages: {', '.join(drivers.get('slowest_stages', {}).keys())}."
         )
 
         return {
             "at_risk_deals": at_risk_list,
             "stage_distribution": stage_counts,
+            "drivers_of_slowdown": drivers,
             "narrative": narrative,
         }
 
     def recommend_actions(self, analysis: Dict[str, Any]) -> List[Action]:
-        """Generate a Salesforce task for each at‑risk deal (placeholder).
-
-        Args:
-            analysis: The analysis dict returned by `analyze()`.
-
-        Returns:
-            A list of `Action` objects representing follow‑ups.
-        """
+        """Generate follow‑up actions for each at‑risk deal."""
         actions: List[Action] = []
         for deal in analysis.get("at_risk_deals", []):
             opp_id = deal.get("opportunity_id") or "unknown"
             owner = deal.get("owner") or "the owner"
-            stage = deal.get("stage") or ""
-            description = (
-                f"Reach out to {owner} to unblock deal {opp_id} (stage: {stage}). "
-                f"Discuss next steps and update the close date if needed."
-            )
-            actions.append(
-                Action(
-                    type="salesforce_task",
-                    description=description,
-                    metadata={"opportunity_id": opp_id},
-                )
-            )
+            score = deal.get("risk_score", 0)
+            reasons = ", ".join(deal.get("reasons", []))
+            
+            # 1) Salesforce Task
+            actions.append(Action(
+                type="salesforce_task",
+                title=f"Unblock Opportunity {opp_id}",
+                description=f"Follow up with {owner} for {opp_id}. Risk factors: {reasons}",
+                priority="high" if score > 70 else "medium",
+                metadata={
+                    "opportunity_id": opp_id,
+                    "subject": f"Unstuck Deal: {opp_id}",
+                    "owner": owner,
+                    "due_date": (_dt.date.today() + _dt.timedelta(days=2)).isoformat()
+                }
+            ))
+            
+            # 2) Slack Message
+            actions.append(Action(
+                type="slack_message",
+                title=f"Risk Alert: {opp_id}",
+                description=f"Alert sales-ops regarding high risk deal {opp_id} ({score}% risk).",
+                priority="medium",
+                metadata={
+                    "channel": "sales-alerts",
+                    "text": f"⚠️ High risk deal {opp_id} is stalled. Score: {score}%. Factors: {reasons}",
+                    "opportunity_id": opp_id
+                }
+            ))
         return actions
