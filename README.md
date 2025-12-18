@@ -5,6 +5,8 @@ The goal of the studio is to take business questions or problems and transform t
 
 This repository contains a **skeleton** implementation for the AAS hackathon project. It does not yet include any working integrations; rather it establishes a clear structure around which to build.  
 
+For the hackathon demo runbook, see [README_DEMO.md](README_DEMO.md).
+
 ## Vision
 
 AAS enables business users to ask questions like **“Why are my deals slipping?”** and receive:
