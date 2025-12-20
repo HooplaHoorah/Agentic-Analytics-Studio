@@ -23,3 +23,6 @@ venv/
 # Data outputs
 data/
 *.jsonl
+
+# Local Antigravity notes (do not commit)
+instructions\ for\ Antigravity/

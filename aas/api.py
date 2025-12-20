@@ -15,6 +15,8 @@ from .agents.pipeline_leakage import PipelineLeakageAgent
 from .agents.churn_rescue import ChurnRescueAgent
 from .agents.spend_anomaly import SpendAnomalyAgent
 from .executor import execute_actions
+from .services.tableau_client import TableauClient
+import os
 
 # Optional: handle pandas.Timestamp cleanly if it ever leaks into responses
 try:
@@ -192,3 +194,40 @@ def executions():
                 executions.append(json.loads(line))
 
     return {"executions": executions[-50:]}  # last 50
+
+
+@app.get("/tableau/views")
+def get_tableau_views():
+    """List available Tableau views if credentials are set in environment."""
+    server_url = os.getenv("TABLEAU_SERVER_URL")
+    site_id = os.getenv("TABLEAU_SITE_ID", "")
+    token_name = os.getenv("TABLEAU_TOKEN_NAME")
+    token_secret = os.getenv("TABLEAU_TOKEN_SECRET")
+
+    if not all([server_url, token_name, token_secret]):
+        return {
+            "status": "not_configured",
+            "message": "Tableau credentials not fully set in environment (TABLEAU_SERVER_URL, TABLEAU_TOKEN_NAME, TABLEAU_TOKEN_SECRET)",
+            "views": []
+        }
+
+    try:
+        client = TableauClient(
+            server_url=server_url,
+            site_id=site_id,
+            token_name=token_name,
+            token_secret=token_secret
+        )
+        views = client.get_views()
+        # Simplify view objects for response
+        result = []
+        for v in views:
+            result.append({
+                "id": v.id,
+                "name": v.name,
+                "workbook_id": v.workbook_id,
+                "content_url": v.content_url
+            })
+        return {"status": "success", "views": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "views": []}

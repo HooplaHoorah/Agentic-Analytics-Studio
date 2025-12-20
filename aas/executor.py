@@ -63,15 +63,11 @@ def execute_actions(actions: List[Dict[str, Any]], run_id: str | None = None) ->
                     
             elif action_type == "slack_message":
                 if slack_client:
-                    try:
-                        res = slack_client.send_message(
-                            channel=metadata.get("channel", "#general"),
-                            text=metadata.get("text", action.get("description", ""))
-                        )
-                        result["details"] = res
-                    except NotImplementedError:
-                        result["status"] = "demo_success"
-                        result["details"] = {"note": "Slack message logged in demo mode (client not implemented)."}
+                    res = slack_client.send_message(
+                        channel=metadata.get("channel", "#general"),
+                        text=metadata.get("text", action.get("description", ""))
+                    )
+                    result["details"] = res
                 else:
                     result["status"] = "demo_success"
                     result["details"] = {"note": "Slack not configured; running in demo mode."}
