@@ -37,3 +37,7 @@ class TableauClient:
         images from a Tableau view.
         """
         raise NotImplementedError
+
+    def get_views(self) -> list[Any]:
+        """List available views."""
+        return []

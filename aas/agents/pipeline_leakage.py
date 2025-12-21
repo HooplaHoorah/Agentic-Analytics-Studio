@@ -131,6 +131,11 @@ class PipelineLeakageAgent(AgentPlay):
             "stage_distribution": stage_counts,
             "drivers_of_slowdown": drivers,
             "narrative": narrative,
+            "visual_context": {
+                "view_name": "Pipeline Risk",
+                "workbook": "Sales Operations",
+                "note": "Embedded Tableau context for this analysis"
+            }
         }
 
     def recommend_actions(self, analysis: Dict[str, Any]) -> List[Action]:

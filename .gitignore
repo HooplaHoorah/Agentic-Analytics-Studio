@@ -23,3 +23,6 @@ venv/
 # Data outputs
 data/
 *.jsonl
+
+# instructions for Antigravity
+instructions for Antigravity/

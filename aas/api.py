@@ -196,3 +196,49 @@ def executions():
                 executions.append(json.loads(line))
 
     return {"executions": executions[-50:]}  # last 50
+@app.get("/tableau/views")
+def get_tableau_views():
+    """List available Tableau views if credentials are set in environment."""
+    server_url = os.getenv("TABLEAU_SERVER_URL")
+    site_id = os.getenv("TABLEAU_SITE_ID", "")
+    token_name = os.getenv("TABLEAU_TOKEN_NAME")
+    token_secret = os.getenv("TABLEAU_TOKEN_SECRET")
+
+    if not all([server_url, token_name, token_secret]):
+        return {
+            "status": "not_configured",
+            "message": "Tableau credentials not fully set in environment (TABLEAU_SERVER_URL, TABLEAU_TOKEN_NAME, TABLEAU_TOKEN_SECRET)",
+            "views": []
+        }
+
+    try:
+        from .services.tableau_client import TableauClient
+        client = TableauClient(
+            server_url=server_url,
+            site_id=site_id,
+            token_name=token_name,
+            token_secret=token_secret
+        )
+        views = client.get_views()
+        # Simplify view objects for response
+        result = []
+        for v in views:
+            # Construct embed URL (standard Tableau format)
+            # With site: https://<server>/t/<site_id>/views/<content_url>?:showVizHome=no
+            # Without site: https://<server>/views/<content_url>?:showVizHome=no
+            base_url = server_url.rstrip("/")
+            if site_id:
+                embed_url = f"{base_url}/t/{site_id}/views/{v.content_url}?:showVizHome=no"
+            else:
+                embed_url = f"{base_url}/views/{v.content_url}?:showVizHome=no"
+
+            result.append({
+                "id": v.id,
+                "name": v.name,
+                "workbook_id": v.workbook_id,
+                "content_url": v.content_url,
+                "embed_url": embed_url
+            })
+        return {"status": "success", "views": result}
+    except Exception as e:
+        return {"status": "error", "message": str(e), "views": []}
