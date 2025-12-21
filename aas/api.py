@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import os
 import json
 from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone
 from typing import Any, Dict
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
