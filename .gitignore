@@ -25,7 +25,7 @@ data/
 *.jsonl
 
 # Instructions & Temp
-instructions for Antigravity/
+
 instructions10/
 instructions11/
 temp_*.md

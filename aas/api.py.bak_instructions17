@@ -6,7 +6,6 @@ from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone
 from typing import Any, Dict
-from urllib.parse import quote
 
 from dotenv import load_dotenv
 
@@ -232,16 +231,6 @@ def executions():
                 executions.append(json.loads(line))
 
     return {"executions": executions[-50:]}  # last 50
-def _build_tableau_embed_url(server_url: str, site_id: str, content_url: str) -> str:
-    # Build a Tableau Cloud/Server embed URL for a view.
-    # Canonical: https://<server>/t/<site>/views/<workbook>/<view>?:showVizHome=no&:embed=yes
-    base = (server_url or '').rstrip('/')
-    safe_content = '/'.join(quote(part) for part in (content_url or '').lstrip('/').split('/'))
-    if site_id:
-        return f"{base}/t/{site_id}/views/{safe_content}?:showVizHome=no&:embed=yes"
-    return f"{base}/views/{safe_content}?:showVizHome=no&:embed=yes"
-
-
 @app.get("/tableau/views")
 def get_tableau_views():
     """List available Tableau views if credentials are set in environment."""
