@@ -8,7 +8,10 @@ from datetime import datetime, timezone
 from typing import Any, Dict
 
 from dotenv import load_dotenv
-load_dotenv()
+
+# Load .env from project root
+_env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(_env_path)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -105,7 +108,39 @@ def run_play(play: str, req: RunRequest = RunRequest()):
     else:
         payload = {"result": str(result)}
 
-    # Add run metadata to the top-level response (keeps $res.actions working)
+    # Enrich actions with Tableau embed URLs if possible
+    if "actions" in payload and isinstance(payload["actions"], list):
+        try:
+            from .services.tableau_client import TableauClient
+            server_url = os.getenv("TABLEAU_SERVER_URL")
+            if server_url:
+                client = TableauClient(
+                    server_url=server_url,
+                    site_id=os.getenv("TABLEAU_SITE_ID", ""),
+                    token_name=os.getenv("TABLEAU_TOKEN_NAME", ""),
+                    token_secret=os.getenv("TABLEAU_TOKEN_SECRET", "")
+                )
+                views = client.get_views()
+                if views:
+                    # Default to first view if not specified, 
+                    # or try to match view_name from visual_context
+                    pref_view = views[0]
+                    viz_ctx = payload.get("visual_context", {})
+                    if viz_ctx.get("view_name"):
+                        match = next((v for v in views if viz_ctx["view_name"].lower() in v["name"].lower()), None)
+                        if match:
+                            pref_view = match
+                    
+                    for action in payload["actions"]:
+                        if "metadata" not in action:
+                            action["metadata"] = {}
+                        if "embed_url" not in action["metadata"]:
+                            action["metadata"]["embed_url"] = pref_view["embed_url"]
+        except Exception as e:
+            # Silent fail for enrichment
+            pass
+
+    # Add run metadata to the top-level response
     if isinstance(payload, dict):
         payload = {
             "run_id": run_id,
@@ -220,25 +255,6 @@ def get_tableau_views():
             token_secret=token_secret
         )
         views = client.get_views()
-        # Simplify view objects for response
-        result = []
-        for v in views:
-            # Construct embed URL (standard Tableau format)
-            # With site: https://<server>/t/<site_id>/views/<content_url>?:showVizHome=no
-            # Without site: https://<server>/views/<content_url>?:showVizHome=no
-            base_url = server_url.rstrip("/")
-            if site_id:
-                embed_url = f"{base_url}/t/{site_id}/views/{v.content_url}?:showVizHome=no"
-            else:
-                embed_url = f"{base_url}/views/{v.content_url}?:showVizHome=no"
-
-            result.append({
-                "id": v.id,
-                "name": v.name,
-                "workbook_id": v.workbook_id,
-                "content_url": v.content_url,
-                "embed_url": embed_url
-            })
-        return {"status": "success", "views": result}
+        return {"status": "success", "views": views}
     except Exception as e:
         return {"status": "error", "message": str(e), "views": []}

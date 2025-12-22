@@ -83,6 +83,15 @@ async function loadTableauView(preferredName = null) {
     }
 }
 
+function loadSpecificView(url) {
+    if (!url) {
+        alert("No specific view context available for this action.");
+        return;
+    }
+    const vizContainer = document.getElementById('tableau-viz');
+    vizContainer.innerHTML = `<iframe src="${url}" style="width:100%; height:100%; border:none;" allowfullscreen></iframe>`;
+}
+
 function renderActions(actions) {
     pendingActions = actions;
     actionsList.innerHTML = '';
@@ -105,7 +114,7 @@ function renderActions(actions) {
       <div class="action-type ${typeClass}">${typeLabel}</div>
       <div class="action-title">${action.title || 'New Action'}</div>
       <div class="action-desc">${action.description}</div>
-      <div class="action-context" style="font-size: 0.7rem; color: var(--accent-primary); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem;">
+      <div class="action-context" style="font-size: 0.7rem; color: var(--accent-primary); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; cursor: pointer;" onclick="loadSpecificView('${action.metadata?.embed_url || ''}')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         View context in Tableau
       </div>
