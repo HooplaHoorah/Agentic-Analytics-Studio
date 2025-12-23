@@ -196,11 +196,25 @@ function renderActions(actions) {
         const typeClass = action.type === 'slack_message' ? 'type-slack' : 'type-sf';
         const typeLabel = action.type === 'slack_message' ? 'Slack' : 'Salesforce';
 
+        // build the context URL and view name using new visual_context schema when present
+        const ctxUrl =
+            action?.metadata?.visual_context?.url ||
+            action?.metadata?.url ||
+            action?.metadata?.embed_url ||
+            '';
+        // Safe decoding for view name
+        let ctxName = action?.metadata?.visual_context?.view_name || action?.metadata?.view_name || '';
+        try {
+            ctxName = decodeURIComponent(encodeURIComponent(ctxName));
+        } catch (e) {
+            // Fallback if something is weird
+        }
+
         card.innerHTML = `
       <div class="action-type ${typeClass}">${typeLabel}</div>
       <div class="action-title">${action.title || 'New Action'}</div>
       <div class="action-desc">${action.description}</div>
-      <div class="action-context" style="font-size: 0.7rem; color: var(--accent-primary); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; cursor: pointer;" onclick="loadSpecificView('${action.metadata?.embed_url || ''}', decodeURIComponent('${encodeURIComponent(action.metadata?.view_name || '')}'))">
+      <div class="action-context" style="font-size: 0.7rem; color: var(--accent-primary); margin-top: 0.5rem; display: flex; align-items: center; gap: 0.25rem; cursor: pointer;" onclick="loadSpecificView('${ctxUrl}', '${ctxName}')">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
         View context in Tableau
       </div>
