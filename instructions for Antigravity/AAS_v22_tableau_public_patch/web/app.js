@@ -10,27 +10,27 @@ const TABLEAU_MODE = new URLSearchParams(window.location.search).get('tableau') 
 // Format example:
 // https://public.tableau.com/views/WORKBOOK/SHEET?:showVizHome=no&:embed=true
 const TABLEAU_PUBLIC_DEFAULT_URL =
-    "https://public.tableau.com/views/Superstore_24/Overview?:showVizHome=no&:embed=true";
+  "https://public.tableau.com/views/Superstore_24/Overview?:showVizHome=no&:embed=true";
 
 // Optional: map preferredName -> specific Tableau Public sheet
 const TABLEAU_PUBLIC_VIEWS = {
-    overview: TABLEAU_PUBLIC_DEFAULT_URL,
-    // pipeline: "https://public.tableau.com/views/YourWorkbook/Pipeline?:showVizHome=no&:embed=true",
-    // risk:     "https://public.tableau.com/views/YourWorkbook/Risk?:showVizHome=no&:embed=true",
+  overview: TABLEAU_PUBLIC_DEFAULT_URL,
+  // pipeline: "https://public.tableau.com/views/YourWorkbook/Pipeline?:showVizHome=no&:embed=true",
+  // risk:     "https://public.tableau.com/views/YourWorkbook/Risk?:showVizHome=no&:embed=true",
 };
 
 function isTableauCloudUrl(url = "") {
-    return /online\.tableau\.com/i.test(url);
+  return /online\.tableau\.com/i.test(url);
 }
 
 function resolvePublicUrl(preferredName = "") {
-    if (!preferredName) return TABLEAU_PUBLIC_DEFAULT_URL;
-    const key = preferredName.toLowerCase().trim();
-    return TABLEAU_PUBLIC_VIEWS[key] || TABLEAU_PUBLIC_DEFAULT_URL;
+  if (!preferredName) return TABLEAU_PUBLIC_DEFAULT_URL;
+  const key = preferredName.toLowerCase().trim();
+  return TABLEAU_PUBLIC_VIEWS[key] || TABLEAU_PUBLIC_DEFAULT_URL;
 }
 
 function renderViz(vizContainer, url, linkLabel = "Open dashboard") {
-    vizContainer.innerHTML = `
+  vizContainer.innerHTML = `
     <div style="height:100%; display:flex; flex-direction:column;">
       <div style="flex:1; border-radius:12px; overflow:hidden;">
         <iframe
@@ -129,17 +129,16 @@ async function loadTableauView(preferredName = null) {
                 view = data.views.find(v => v.name.toLowerCase().includes(preferredName.toLowerCase())) || view;
             }
 
-            // If the API hands us a Tableau Cloud URL, we usually block it to avoid auth issues.
-            // But if the user explicitly asked for ?tableau=cloud (and is presumably logged in), we ALLOW it.
-            if (isTableauCloudUrl(view.embed_url) && TABLEAU_MODE !== 'cloud') {
+            // If the API hands us a Tableau Cloud URL, do NOT iframe it. Fallback to Public.
+            if (isTableauCloudUrl(view.embed_url)) {
                 const publicUrl = resolvePublicUrl(preferredName || view.name || "overview");
                 renderViz(vizContainer, publicUrl, "Open Tableau (Public)");
-                console.warn(`Blocked Cloud iframe (mode=${TABLEAU_MODE}). Falling back to Public for: ${view.name}`);
+                console.warn(`Blocked Cloud iframe detected. Falling back to Public for: ${view.name}`);
                 return;
             }
 
-            renderViz(vizContainer, view.embed_url, "Open Tableau (Cloud)");
-            console.log(`Loaded Tableau view (mode=${TABLEAU_MODE}): ${view.name}`);
+            renderViz(vizContainer, view.embed_url, "Open Tableau");
+            console.log(`Loaded Tableau view (mode=cloud): ${view.name}`);
         } else {
             const publicUrl = resolvePublicUrl(preferredName || "overview");
             renderViz(vizContainer, publicUrl, "Open Tableau (Public)");

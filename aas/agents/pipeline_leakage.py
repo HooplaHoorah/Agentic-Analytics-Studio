@@ -132,8 +132,9 @@ class PipelineLeakageAgent(AgentPlay):
             "drivers_of_slowdown": drivers,
             "narrative": narrative,
             "visual_context": {
-                "view_name": "Pipeline Risk",
-                "workbook": "Sales Operations",
+                "view_name": "Superstore Overview",
+                "workbook": "Superstore",
+                "url": "https://10ax.online.tableau.com/#/site/agenticanalyticsstudio/views/Superstore/Overview",
                 "note": "Embedded Tableau context for this analysis"
             }
         }
