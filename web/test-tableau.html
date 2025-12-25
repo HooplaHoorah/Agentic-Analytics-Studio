@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Tableau Cloud Embed Test</title>
+</head>
+
+<body>
+    <h1>Testing Tableau Web Component</h1>
+    <div id="test-results"></div>
+    <div id="viz-container" style="width: 100%; height: 600px; border: 1px solid #ccc;"></div>
+
+    <script type="module">
+        const API_BASE = '/api';
+        const results = document.getElementById('test-results');
+
+        function log(msg) {
+            const p = document.createElement('p');
+            p.textContent = msg;
+            results.appendChild(p);
+            console.log(msg);
+        }
+
+        async function ensureTableauEmbeddingApi() {
+            if (window.customElements?.get("tableau-viz")) {
+                log("✓ Tableau API already loaded");
+                return;
+            }
+
+            log("Loading Tableau Embedding API...");
+            await new Promise((resolve, reject) => {
+                const s = document.createElement("script");
+                s.type = "module";
+                s.src = "https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js";
+                s.onload = () => {
+                    log("✓ Tableau API loaded successfully");
+                    resolve();
+                };
+                s.onerror = () => {
+                    log("✗ Failed to load Tableau API");
+                    reject();
+                };
+                document.head.appendChild(s);
+            });
+        }
+
+        async function testEmbed() {
+            try {
+                // Step 1: Load API
+                await ensureTableauEmbeddingApi();
+
+                // Step 2: Fetch JWT
+                log("Fetching JWT from backend...");
+                const r = await fetch(`${API_BASE}/tableau/jwt`);
+                if (!r.ok) {
+                    log(`✗ JWT endpoint failed: ${r.status}`);
+                    return;
+                }
+                const { token, vizUrl } = await r.json();
+                log(`✓ Got JWT and vizUrl: ${vizUrl}`);
+
+                if (!vizUrl || !vizUrl.includes("/views/")) {
+                    log(`✗ Invalid vizUrl (missing /views/): ${vizUrl}`);
+                    return;
+                }
+
+                // Step 3: Create viz
+                log("Creating tableau-viz element...");
+                const container = document.getElementById("viz-container");
+                container.innerHTML = "";
+
+                const viz = document.createElement("tableau-viz");
+                viz.id = "testViz";
+                viz.setAttribute("toolbar", "bottom");
+                viz.setAttribute("hide-tabs", "");
+                viz.style.width = '100%';
+                viz.style.height = '100%';
+
+                container.appendChild(viz);
+                log("✓ tableau-viz element created and appended");
+
+                // Step 4: Apply src + token
+                viz.src = vizUrl;
+                viz.token = token;
+                log("✓ Applied src and token to viz");
+
+                // Step 5: Listen for events
+                viz.addEventListener('firstinteractive', () => {
+                    log("✓✓✓ Tableau viz is INTERACTIVE!");
+                });
+
+            } catch (e) {
+                log(`✗ Error: ${e.message}`);
+                console.error(e);
+            }
+        }
+
+        testEmbed();
+    </script>
+</body>
+
+</html>
