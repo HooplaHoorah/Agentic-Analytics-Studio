@@ -1,4 +1,4 @@
-import { TableauEventType } from 'https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js';
+// Tableau Embedding API is now loaded dynamically via ensureTableauEmbeddingApi()
 
 // Use localhost API when developing locally; use Netlify proxy in production.
 const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
@@ -12,6 +12,65 @@ const TABLEAU_MODE = new URLSearchParams(window.location.search).get('tableau') 
 
 // Fallback/Default Public URL
 const TABLEAU_PUBLIC_DEFAULT_URL = "https://public.tableau.com/views/Superstore_24/Overview?:showVizHome=no&:embed=true";
+
+
+// --- New Helpers from INSTRUCTIONS30 ---
+
+async function ensureTableauEmbeddingApi() {
+    if (window.customElements?.get("tableau-viz")) return;
+
+    await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.type = "module";
+        s.src = "https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js";
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+async function renderTableauCloudViz(containerEl) {
+    await ensureTableauEmbeddingApi();
+
+    const r = await fetch(`${API_BASE}/tableau/jwt`);
+    if (!r.ok) throw new Error(`JWT endpoint failed: ${r.status}`);
+    const { token, vizUrl } = await r.json();
+
+    if (!vizUrl || !vizUrl.includes("/views/")) {
+        throw new Error(`Invalid vizUrl returned (missing /views/): ${vizUrl}`);
+    }
+
+    // Clear container
+    containerEl.innerHTML = "";
+
+    // Create web component
+    const viz = document.createElement("tableau-viz");
+    viz.id = "aasViz";
+    // Attributes must be set before appending or before src is set for best reliability
+    viz.setAttribute("toolbar", "bottom");
+    viz.setAttribute("hide-tabs", "");
+
+    // Style it to fill container
+    viz.style.width = '100%';
+    viz.style.height = '100%';
+
+    containerEl.appendChild(viz);
+
+    // Apply src + token
+    viz.src = vizUrl;
+    viz.token = token;
+
+    // Add event listener for bi-directional context
+    // Note: Using string 'firstinteractive' instead of TableauEventType for dynamic loading safety
+    viz.addEventListener('firstinteractive', () => {
+        console.log("Tableau Cloud Viz Loaded & Interactive");
+        viz.addEventListener('markselectionchanged', onMarkSelectionChanged);
+    });
+
+    return viz;
+}
+
+// --- End Helpers ---
 
 
 // State
@@ -57,30 +116,17 @@ async function getTableauToken() {
 }
 
 async function loadTableauView() {
-    let url = TABLEAU_PUBLIC_DEFAULT_URL;
-    let token = null;
-
     if (TABLEAU_MODE === 'cloud') {
-        // Fetch JWT + Viz URL from backend
         try {
-            const resp = await fetch(`${API_BASE}/tableau/jwt`);
-            if (resp.ok) {
-                const data = await resp.json();
-                if (data.token && data.vizUrl) {
-                    token = data.token;
-                    url = data.vizUrl;
-                } else {
-                    console.warn("Backend returned incomplete Tableau data", data);
-                }
-            } else {
-                console.error("Failed to fetch Tableau config from backend");
-            }
+            currentViz = await renderTableauCloudViz(vizContainer);
         } catch (e) {
             console.error("Error initializing Tableau Cloud view", e);
+            // Fallback to public if cloud fails
+            renderTableauViz(TABLEAU_PUBLIC_DEFAULT_URL);
         }
+    } else {
+        renderTableauViz(TABLEAU_PUBLIC_DEFAULT_URL);
     }
-
-    renderTableauViz(url, token);
 }
 
 function renderTableauViz(src, token = null) {
@@ -102,9 +148,9 @@ function renderTableauViz(src, token = null) {
     }
 
     // Add detailed event listener for bi-directional context
-    viz.addEventListener(TableauEventType.FirstInteractive, () => {
+    viz.addEventListener('firstinteractive', () => {
         console.log("Tableau Viz Loaded & Interactive");
-        viz.addEventListener(TableauEventType.MarkSelectionChanged, onMarkSelectionChanged);
+        viz.addEventListener('markselectionchanged', onMarkSelectionChanged);
     });
 
     vizContainer.appendChild(viz);
