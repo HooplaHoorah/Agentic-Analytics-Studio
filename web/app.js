@@ -61,19 +61,19 @@ async function loadTableauView() {
     let token = null;
 
     if (TABLEAU_MODE === 'cloud') {
-        // Fetch views from backend
+        // Fetch JWT + Viz URL from backend
         try {
-            const res = await fetch(`${API_BASE}/tableau/views`);
-            const data = await res.json();
-            if (data.status === 'success' && data.views && data.views.length > 0) {
-                // Use the first view or find one named 'Overview'
-                const match = data.views.find(v => v.name.toLowerCase().includes('overview')) || data.views[0];
-                url = match.embed_url;
-
-                // Fetch JWT
-                token = await getTableauToken();
+            const resp = await fetch(`${API_BASE}/tableau/jwt`);
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data.token && data.vizUrl) {
+                    token = data.token;
+                    url = data.vizUrl;
+                } else {
+                    console.warn("Backend returned incomplete Tableau data", data);
+                }
             } else {
-                console.warn("Tableau Cloud mode requested but no views returned. Falling back to Public.");
+                console.error("Failed to fetch Tableau config from backend");
             }
         } catch (e) {
             console.error("Error initializing Tableau Cloud view", e);

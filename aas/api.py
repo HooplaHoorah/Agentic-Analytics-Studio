@@ -444,7 +444,22 @@ def _build_tableau_jwt(user: str) -> str:
 def tableau_jwt():
     """Generate a valid JWT for Tableau Connected App embedding."""
     user = os.getenv("TABLEAU_CONNECTED_APP_USERNAME", "aas_demo")
+    
+    # 1. Get the configured Viz URL (Essential for Cloud Embed)
+    # Prefer explicit CLOUD URL, fallback to PUBLIC if needed (though public doesn't need JWT)
+    viz_url = os.getenv("TABLEAU_VIZ_URL_CLOUD")
+    
+    if not viz_url:
+        return {"status": "error", "message": "TABLEAU_VIZ_URL_CLOUD not set in environment"}
+
+    # 2. Sanity Check (Instruction 29)
+    if "/views/" not in viz_url:
+        print(f"Error: Invalid Tableau Viz URL configured: {viz_url}")
+        # We return 500 or a clear error so frontend stops
+        raise HTTPException(status_code=500, detail="Misconfigured TABLEAU_VIZ_URL_CLOUD. Must contain '/views/'.")
+
     try:
-        return {"token": _build_tableau_jwt(user)}
+        token = _build_tableau_jwt(user)
+        return {"token": token, "vizUrl": viz_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}
