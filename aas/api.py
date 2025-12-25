@@ -4,7 +4,7 @@ import os
 import json
 from pathlib import Path
 from uuid import uuid4
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict
 from urllib.parse import quote
 import jwt
@@ -427,7 +427,7 @@ def _build_tableau_jwt(user: str) -> str:
     token = jwt.encode(
         {
             "iss": client_id,
-            "exp": datetime.now(timezone.utc) + datetime.timedelta(minutes=10),
+            "exp": datetime.now(timezone.utc) + timedelta(minutes=10),
             "jti": str(uuid4()),
             "aud": "tableau",
             "sub": user,
