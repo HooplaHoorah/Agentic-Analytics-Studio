@@ -133,7 +133,7 @@ def main() -> None:
         # pick a few risky opps: high stage age + high amount
         cur.execute(
             """
-            SELECT opportunity_id, owner, region, stage, amount, stage_age_days
+            SELECT opportunity_id, owner, region, segment, stage, amount, stage_age_days
             FROM aas_opportunities
             WHERE stage NOT IN ('Closed Won','Closed Lost')
             ORDER BY (stage_age_days * amount) DESC
@@ -141,13 +141,14 @@ def main() -> None:
             """
         )
         rows = cur.fetchall()
-        for (opportunity_id, owner, region, stage, amount, stage_age_days) in rows:
+        for (opportunity_id, owner, region, segment, stage, amount, stage_age_days) in rows:
             action_id = str(uuid.uuid4())
             title = f"Nudge stalled deal {opportunity_id}"
             desc = f"Deal is stuck in {stage} for {stage_age_days} days; amount ${amount:,.0f}. Send follow-up + update CRM next step."
             payload = {
                 "type": "salesforce_task",
                 "opportunity_id": opportunity_id,
+                "segment": segment,
                 "suggested_next_step": "Schedule follow-up call",
                 "severity": "high" if stage_age_days > 25 else "medium",
             }
@@ -155,8 +156,8 @@ def main() -> None:
                 """
                 INSERT INTO aas_actions (
                   action_id, run_id, created_at, status, action_type, title, description,
-                  priority, owner, region, stage, opportunity_id, payload
-                ) VALUES (%s,%s,%s,'pending',%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                  priority, owner, region, segment, stage, opportunity_id, payload
+                ) VALUES (%s,%s,%s,'pending',%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """,
                 (
                     action_id,
@@ -168,6 +169,7 @@ def main() -> None:
                     1,
                     owner,
                     region,
+                    segment,
                     stage,
                     opportunity_id,
                     json.dumps(payload),

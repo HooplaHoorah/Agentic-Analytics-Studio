@@ -177,17 +177,35 @@ async function refreshViz() {
 // --- 3. Bi-Directional Context (Selection -> Actions) ---
 
 function safeGetField(marks, fieldName) {
-    // Helper to dig into the complexity of Tableau Marks API
+    // Helper to dig into the complexity of Tableau Marks API.
+    // This uses a flexible match because Tableau sometimes namespaces field names.
     if (!marks || !marks.data || !marks.data.length) return null;
-    try {
-        const dataTable = marks.data[0];
-        // dataTable.data is array of rows
-        // dataTable.columns is metadata
-        // We look for column index
-        const colIdx = dataTable.columns.findIndex(c => c.fieldName === fieldName);
-        if (colIdx === -1) return null;
+    const want = String(fieldName || '').toLowerCase();
 
-        return dataTable.data[0][colIdx].value;
+    // Collect values across all returned mark rows/tables.
+    // If the selection is aggregated but still has a single dimension value
+    // (e.g., Segment = Enterprise), we return it. If multiple values exist,
+    // we return null to avoid sending ambiguous filters.
+    try {
+        for (const dataTable of (marks.data || [])) {
+            const cols = dataTable.columns || [];
+
+            // 1) exact (case-insensitive)
+            let colIdx = cols.findIndex(c => String(c.fieldName || '').toLowerCase() === want);
+            // 2) partial (case-insensitive)
+            if (colIdx === -1) colIdx = cols.findIndex(c => String(c.fieldName || '').toLowerCase().includes(want));
+            if (colIdx === -1) continue;
+
+            const values = [];
+            for (const row of (dataTable.data || [])) {
+                const v = row?.[colIdx]?.value;
+                if (v !== undefined && v !== null && v !== '') values.push(v);
+            }
+
+            const uniq = Array.from(new Set(values.map(v => String(v))));
+            if (uniq.length === 1) return uniq[0];
+        }
+        return null;
     } catch (e) {
         return null;
     }
@@ -206,9 +224,10 @@ async function onMarkSelectionChanged(e) {
         const region = safeGetField(marks, 'Region');
         const owner = safeGetField(marks, 'Owner');
         const stage = safeGetField(marks, 'Stage');
+        const segment = safeGetField(marks, 'Segment');
 
-        console.log("Context selected:", { region, owner, stage });
-        fetchContextActions({ region, owner, stage });
+        console.log("Context selected:", { region, owner, stage, segment });
+        fetchContextActions({ region, owner, stage, segment });
 
     } catch (err) {
         console.error("Error handling mark selection", err);
@@ -220,6 +239,8 @@ async function fetchContextActions(filters = {}) {
     if (filters.region) params.set('region', filters.region);
     if (filters.owner) params.set('owner', filters.owner);
     if (filters.stage) params.set('stage', filters.stage);
+    if (filters.segment) params.set('segment', filters.segment);
+    if (filters.segment) params.set('segment', filters.segment);
 
     try {
         const resp = await fetch(`${API_BASE}/context/actions?${params.toString()}`);
@@ -243,11 +264,12 @@ function renderActions(actions, activeFilters = null) {
     actionCountBadge.textContent = `${actions.length} PENDING`;
 
     // Render Context Badge if filters active
-    if (activeFilters && (activeFilters.region || activeFilters.owner || activeFilters.stage)) {
+    if (activeFilters && (activeFilters.region || activeFilters.owner || activeFilters.stage || activeFilters.segment)) {
         const hints = [];
         if (activeFilters.region) hints.push(`Region: ${activeFilters.region}`);
         if (activeFilters.owner) hints.push(`Owner: ${activeFilters.owner}`);
         if (activeFilters.stage) hints.push(`Stage: ${activeFilters.stage}`);
+        if (activeFilters.segment) hints.push(`Segment: ${activeFilters.segment}`);
 
         const badge = document.createElement('div');
         badge.className = 'context-filter-badge';

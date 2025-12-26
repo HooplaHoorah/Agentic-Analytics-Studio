@@ -10,12 +10,14 @@ out the MVP.
 from __future__ import annotations
 
 import datetime as _dt
+import os
 from importlib import resources
 from typing import Any, Dict, List
 
 import pandas as pd  # type: ignore
 
 from .base import AgentPlay
+from ..db import get_conn
 from ..models.action import Action
 from ..utils.logger import get_logger
 
@@ -27,14 +29,55 @@ class PipelineLeakageAgent(AgentPlay):
     """Agent that identifies at‑risk deals and proposes follow‑ups."""
 
     def load_data(self) -> pd.DataFrame:
-        """Load the sample pipeline dataset from the package."""
+        """Load pipeline data.
+
+        Preference order:
+        1) Postgres ("live" demo) via DATABASE_URL + `aas_opportunities`.
+        2) Packaged CSV fallback (static demo).
+        """
+
+        # 1) Live demo path: Postgres
+        if os.getenv("DATABASE_URL"):
+            try:
+                conn = get_conn()
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        SELECT opportunity_id, owner, region, segment, stage, amount,
+                               close_date, last_touch_date, stage_age_days
+                        FROM aas_opportunities
+                        WHERE stage NOT IN ('Closed Won','Closed Lost');
+                        """
+                    )
+                    rows = cur.fetchall()
+                conn.close()
+
+                if rows:
+                    df = pd.DataFrame(
+                        rows,
+                        columns=[
+                            "opportunity_id",
+                            "owner",
+                            "region",
+                            "segment",
+                            "stage",
+                            "amount",
+                            "close_date",
+                            "last_touch_date",
+                            "stage_age",
+                        ],
+                    )
+                    return df
+            except Exception as e:
+                logger.warning("Failed to load live data from Postgres; falling back to CSV. Error=%s", e)
+
+        # 2) Static demo path: packaged CSV
         try:
             with resources.open_text("aas.data", "demo_pipeline_data.csv") as f:
-                df = pd.read_csv(f)
+                return pd.read_csv(f)
         except FileNotFoundError:
             logger.warning("demo_pipeline_data.csv not found; returning empty DataFrame")
             return pd.DataFrame()
-        return df
 
     def analyze(self, data: pd.DataFrame) -> Dict[str, Any]:
         """Identify at‑risk deals and basic pipeline statistics.
@@ -117,7 +160,18 @@ class PipelineLeakageAgent(AgentPlay):
                 at_risk_df[col] = at_risk_df[col].dt.strftime('%Y-%m-%d')
 
         # Select a subset of fields to include in the result
-        cols = [c for c in ["opportunity_id", "stage", "owner", "stage_age", "amount", "close_date", "risk_score", "reasons"] if c in at_risk_df.columns]
+        cols = [c for c in [
+            "opportunity_id",
+            "segment",
+            "region",
+            "stage",
+            "owner",
+            "stage_age",
+            "amount",
+            "close_date",
+            "risk_score",
+            "reasons",
+        ] if c in at_risk_df.columns]
         at_risk_list = at_risk_df[cols].to_dict(orient="records")
 
         narrative = (
@@ -145,6 +199,9 @@ class PipelineLeakageAgent(AgentPlay):
         for deal in analysis.get("at_risk_deals", []):
             opp_id = deal.get("opportunity_id") or "unknown"
             owner = deal.get("owner") or "the owner"
+            region = deal.get("region")
+            segment = deal.get("segment")
+            stage = deal.get("stage")
             score = deal.get("risk_score", 0)
             reasons = ", ".join(deal.get("reasons", []))
             
@@ -158,6 +215,9 @@ class PipelineLeakageAgent(AgentPlay):
                     "opportunity_id": opp_id,
                     "subject": f"Unstuck Deal: {opp_id}",
                     "owner": owner,
+                    "region": region,
+                    "segment": segment,
+                    "stage": stage,
                     "due_date": (_dt.date.today() + _dt.timedelta(days=2)).isoformat()
                 }
             ))
@@ -171,7 +231,10 @@ class PipelineLeakageAgent(AgentPlay):
                 metadata={
                     "channel": "sales-alerts",
                     "text": f"⚠️ High risk deal {opp_id} is stalled. Score: {score}%. Factors: {reasons}",
-                    "opportunity_id": opp_id
+                    "opportunity_id": opp_id,
+                    "region": region,
+                    "segment": segment,
+                    "stage": stage,
                 }
             ))
         return actions

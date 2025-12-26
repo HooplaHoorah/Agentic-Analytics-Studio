@@ -178,24 +178,58 @@ def run_play(play: str, req: RunRequest = RunRequest()):
                         # (The frontend usually relies on index, but having ID is better)
                         a["action_id"] = action_id
                         
+                        meta = a.get("metadata") or {}
+                        opp_id = a.get("opportunity_id") or meta.get("opportunity_id")
+
+                        # Prefer explicit fields on the action payload, but fall back to metadata.
+                        owner = a.get("owner") or meta.get("owner")
+                        region = meta.get("region") or a.get("region")
+                        stage = meta.get("stage") or a.get("stage")
+                        segment = meta.get("segment") or a.get("segment")
+
+                        # Normalize priority into an int (1=high, 2=medium, 3=low/default)
+                        priority_raw = a.get("priority", 3)
+                        priority_map = {"high": 1, "medium": 2, "low": 3}
+                        if isinstance(priority_raw, str):
+                            priority = priority_map.get(priority_raw.lower().strip(), 3)
+                        else:
+                            try:
+                                priority = int(priority_raw)
+                            except Exception:
+                                priority = 3
+
+                        # If segment wasn't provided, try to infer it from the live opportunities table.
+                        if not segment and opp_id:
+                            try:
+                                cur.execute(
+                                    "SELECT segment FROM aas_opportunities WHERE opportunity_id = %s",
+                                    (opp_id,),
+                                )
+                                row = cur.fetchone()
+                                if row:
+                                    segment = row[0]
+                            except Exception:
+                                pass
+
                         cur.execute(
                             """
                             INSERT INTO aas_actions (
                               action_id, run_id, created_at, status,
                               action_type, title, description, priority,
-                              owner, region, stage, opportunity_id, payload
-                            ) VALUES (%s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                              owner, region, segment, stage, opportunity_id, payload
+                            ) VALUES (%s, %s, %s, 'pending', %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                             """,
                             (
                                 action_id, run_id, run_ts,
                                 a.get("type"),
                                 a.get("title"),
                                 a.get("description", ""),
-                                int(a.get("priority", 3)),
-                                a.get("owner"),
-                                a.get("metadata", {}).get("region") or a.get("region"),
-                                a.get("metadata", {}).get("stage") or a.get("stage"),
-                                a.get("opportunity_id"),
+                                priority,
+                                owner,
+                                region,
+                                segment,
+                                stage,
+                                opp_id,
                                 json.dumps(a, default=str),
                             ),
                         )
@@ -364,7 +398,12 @@ def get_tableau_views():
     except Exception as e:
         return {"status": "error", "message": str(e), "views": []}
 @app.get("/context/actions")
-def context_actions(region: str | None = None, owner: str | None = None, stage: str | None = None):
+def context_actions(
+    region: str | None = None,
+    owner: str | None = None,
+    stage: str | None = None,
+    segment: str | None = None,
+):
     """
     Return pending actions filtered by business context (for Tableau integration).
     """
@@ -384,9 +423,12 @@ def context_actions(region: str | None = None, owner: str | None = None, stage: 
         if stage:
             where.append("stage = %s")
             args.append(stage)
+        if segment:
+            where.append("segment = %s")
+            args.append(segment)
 
         sql = (
-            "SELECT action_id, action_type, title, description, priority, owner, region, stage, opportunity_id, payload "
+            "SELECT action_id, action_type, title, description, priority, owner, region, segment, stage, opportunity_id, payload "
             "FROM aas_actions WHERE " + " AND ".join(where) +
             " ORDER BY priority ASC, created_at DESC LIMIT 50"
         )
@@ -405,15 +447,16 @@ def context_actions(region: str | None = None, owner: str | None = None, stage: 
                 "priority": r[4],
                 "owner": r[5],
                 "region": r[6],
-                "stage": r[7],
-                "opportunity_id": r[8],
-                "metadata": json.loads(r[9]) if r[9] else {},
+                "segment": r[7],
+                "stage": r[8],
+                "opportunity_id": r[9],
+                "metadata": json.loads(r[10]) if r[10] else {},
                 # Flatten metadata for easier frontend usage if needed, or keep distinct
-                ** (json.loads(r[9]) if r[9] else {}) 
+                ** (json.loads(r[10]) if r[10] else {}) 
             })
         
         conn.close()
-        return {"actions": out, "filters": {"region": region, "owner": owner, "stage": stage}}
+        return {"actions": out, "filters": {"region": region, "owner": owner, "stage": stage, "segment": segment}}
 
     except Exception as e:
         return {"error": str(e)}

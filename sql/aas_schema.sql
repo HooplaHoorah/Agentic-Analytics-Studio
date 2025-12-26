@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS aas_actions (
   priority INT NOT NULL DEFAULT 3,
   owner TEXT,
   region TEXT,
+  segment TEXT,
   stage TEXT,
   opportunity_id TEXT,
   payload JSONB NOT NULL
@@ -52,6 +53,18 @@ CREATE INDEX IF NOT EXISTS idx_aas_actions_status ON aas_actions(status);
 CREATE INDEX IF NOT EXISTS idx_aas_actions_region ON aas_actions(region);
 CREATE INDEX IF NOT EXISTS idx_aas_actions_owner ON aas_actions(owner);
 CREATE INDEX IF NOT EXISTS idx_aas_actions_stage ON aas_actions(stage);
+
+-- Idempotent migration: existing deployments may already have aas_actions without `segment`.
+ALTER TABLE aas_actions ADD COLUMN IF NOT EXISTS segment TEXT;
+CREATE INDEX IF NOT EXISTS idx_aas_actions_segment ON aas_actions(segment);
+
+-- Best-effort backfill for existing actions that reference an opportunity.
+UPDATE aas_actions a
+SET segment = o.segment
+FROM aas_opportunities o
+WHERE a.segment IS NULL
+  AND a.opportunity_id IS NOT NULL
+  AND a.opportunity_id = o.opportunity_id;
 
 CREATE TABLE IF NOT EXISTS aas_executions (
   execution_id TEXT PRIMARY KEY,
