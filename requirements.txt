@@ -5,9 +5,13 @@ uvicorn[standard]>=0.20
 python-dotenv>=1.0
 httpx>=0.25
 
-# Optional integrations (enabled for next phase)
+# Database & Auth
+psycopg2-binary>=2.9
+PyJWT>=2.8
+
+# Optional integrations
 tableauserverclient>=0.19
-# simple_salesforce>=1.12
+simple_salesforce>=1.12
 slack_sdk>=3.21
 
 # LLM/orchestration frameworks (placeholder)

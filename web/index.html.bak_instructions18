@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision Studio | Agentic Analytics Studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- Tableau Embedding API V3 -->
+  <script type="module" src="https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"></script>
+</head>
+<body>
+  <div class="studio-container">
+    <header>
+      <div class="logo-area">
+        <div class="logo-icon">A</div>
+        <h1>Agentic Analytics Studio</h1>
+      </div>
+      <div class="system-status">
+        <span class="status-badge status-online" id="api-status">API: ONLINE</span>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <!-- Left: Insights & Tableau -->
+      <section class="glass-panel" id="viz-panel">
+        <div class="panel-header">
+          <span class="panel-title">Insight Dashboard</span>
+          <div class="controls">
+            <button class="btn btn-outline" id="run-pipeline-btn">Run Pipeline Audit</button>
+          </div>
+        </div>
+        <div class="viz-container" id="tableau-viz">
+          <div class="tableau-placeholder" id="viz-placeholder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+            </svg>
+            <p style="margin-top: 1rem;">Tableau Visualization Surface</p>
+            <p style="font-size: 0.8rem; font-weight: normal; opacity: 0.6;">Select a site or run a play to load data</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Action Center -->
+      <section class="glass-panel" id="action-panel">
+        <div class="panel-header">
+          <span class="panel-title">Recommended Actions</span>
+          <span class="status-badge" id="action-count">0 PENDING</span>
+        </div>
+        <div class="actions-area" id="actions-list">
+          <div class="empty-state" style="text-align: center; color: var(--text-muted); margin-top: 2rem;">
+            <p>No analysis run yet.</p>
+          </div>
+        </div>
+        <div class="actions-footer">
+          <button class="btn btn-outline" id="clear-actions">Clear</button>
+          <button class="btn btn-primary" id="approve-all-btn">Approve All</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

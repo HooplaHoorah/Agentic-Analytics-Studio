@@ -24,5 +24,8 @@ venv/
 data/
 *.jsonl
 
-# Local Antigravity notes (do not commit)
+# Instructions & Temp
 instructions\ for\ Antigravity/
+instructions10/
+instructions11/
+temp_*.md

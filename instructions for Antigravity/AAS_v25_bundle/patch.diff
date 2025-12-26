@@ -1,0 +1,40 @@
+*** Begin Patch
+*** Update File: web/app.js
+@@ function renderActions(actions) {
+-    // existing link builder
+-    onclick="loadSpecificView('${action.metadata?.embed_url || ''}', '${action.metadata?.view_name || ''}')"
++    // build the context URL and view name using new visual_context schema when present
++    const ctxUrl =
++      action?.metadata?.visual_context?.url ||
++      action?.metadata?.url ||
++      action?.metadata?.embed_url ||
++      '';
++    const ctxName =
++      action?.metadata?.visual_context?.view_name ||
++      action?.metadata?.view_name ||
++      '';
++    // updated link builder uses the resolved context
++    onclick="loadSpecificView('${ctxUrl}', '${ctxName}')"
+*** End Patch
+*** Update File: aas/agents/pipeline_leakage.py
+@@ def analyze(self, data: pd.DataFrame) -> Dict[str, Any]:
+-        return {
+-            "at_risk_deals": at_risk_list,
+-            "stage_distribution": stage_counts,
+-            "drivers_of_slowdown": drivers,
+-            "narrative": narrative,
+-        }
++        return {
++            "at_risk_deals": at_risk_list,
++            "stage_distribution": stage_counts,
++            "drivers_of_slowdown": drivers,
++            "narrative": narrative,
++            # Tableau Cloud context for consumers who want to open the dashboard in a new tab
++            "visual_context": {
++                "view_name": "Superstore Overview",
++                "workbook": "Superstore",
++                "url": "https://10ax.online.tableau.com/#/site/agenticanalyticsstudio/views/Superstore/Overview",
++                "note": "Embedded Tableau context for this analysis"
++            },
++        }
+*** End Patch

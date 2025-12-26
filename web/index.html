@@ -1,0 +1,592 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decision Studio | Agentic Analytics Studio</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Tableau Embedding API V3 -->
+  <script type="module" src="https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js"></script>
+
+
+  <!-- AAS_DEMO_POLISH_V21: BEGIN -->
+  <script>
+    (function () {
+      // 1) Wrap buildDomTree if it exists / appears later (prevents cross-origin iframe throws).
+      function wrapBuildDomTree(fn) {
+        if (fn && fn.__aasWrapped) return fn;
+        const wrapped = function () {
+          try { return fn.apply(this, arguments); }
+          catch (e) { return null; }
+        };
+        wrapped.__aasWrapped = true;
+        return wrapped;
+      }
+
+      if (typeof window.buildDomTree === "function") {
+        window.buildDomTree = wrapBuildDomTree(window.buildDomTree);
+      } else {
+        const start = Date.now();
+        const t = setInterval(() => {
+          if (typeof window.buildDomTree === "function") {
+            window.buildDomTree = wrapBuildDomTree(window.buildDomTree);
+            clearInterval(t);
+          } else if (Date.now() - start > 8000) {
+            clearInterval(t);
+          }
+        }, 250);
+      }
+
+      // 2) Console sanitizer (filters known-benign cross-origin/noise strings only).
+      const NOISE = [
+        "Failed to read a named property 'document' from 'Window'",
+        "Blocked a frame with origin",
+        "Refused to display",
+        "X-Frame-Options",
+        "Failed to execute 'postMessage' on 'DOMWindow'",
+        "origin 'null'"
+      ];
+
+      function isNoise(msg) {
+        if (!msg) return false;
+        const s = String(msg);
+        return NOISE.some(n => s.includes(n));
+      }
+
+      const origError = console.error.bind(console);
+      const origWarn = console.warn.bind(console);
+
+      console.error = function () {
+        try {
+          if (arguments && arguments.length && isNoise(arguments[0])) return;
+        } catch (e) { }
+        return origError.apply(console, arguments);
+      };
+
+      console.warn = function () {
+        try {
+          if (arguments && arguments.length && isNoise(arguments[0])) return;
+        } catch (e) { }
+        return origWarn.apply(console, arguments);
+      };
+
+      window.addEventListener("error", function (ev) {
+        try {
+          const msg = ev && (ev.message || ev.error);
+          if (isNoise(msg)) {
+            ev.preventDefault && ev.preventDefault();
+            return false;
+          }
+        } catch (e) { }
+      }, true);
+    })();
+  </script>
+
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%234c8dff'/%3E%3Ctext x='32' y='42' font-size='34' text-anchor='middle' fill='white' font-family='Arial,Helvetica,sans-serif'%3EA%3C/text%3E%3C/svg%3E">
+  <!-- AAS_DEMO_POLISH_V21: END -->
+
+</head>
+
+<body>
+  <div class="studio-container">
+    <header>
+      <div class="logo-area">
+        <div class="logo-icon">A</div>
+        <h1>Agentic Analytics Studio</h1>
+      </div>
+      <div class="system-status">
+        <span class="status-badge status-online" id="api-status">API: ONLINE</span>
+      </div>
+    </header>
+
+    <main class="main-layout">
+      <!-- Left: Insights & Tableau -->
+      <section class="glass-panel" id="viz-panel">
+        <div class="panel-header">
+          <span class="panel-title">Insight Dashboard</span>
+          <div class="controls">
+            <button class="btn btn-outline" id="run-pipeline-btn">Run Pipeline Audit</button>
+          </div>
+        </div>
+        <div class="viz-container" id="tableau-viz">
+          <div class="tableau-placeholder" id="viz-placeholder">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+            </svg>
+            <p style="margin-top: 1rem;">Tableau Visualization Surface</p>
+            <p style="font-size: 0.8rem; font-weight: normal; opacity: 0.6;">Select a site or run a play to load data
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Action Center -->
+      <section class="glass-panel" id="action-panel">
+        <div class="panel-header">
+          <span class="panel-title">Recommended Actions</span>
+          <span class="status-badge" id="action-count">0 PENDING</span>
+        </div>
+        <div class="actions-area" id="actions-list">
+          <div class="empty-state" style="text-align: center; color: var(--text-muted); margin-top: 2rem;">
+            <p>No analysis run yet.</p>
+          </div>
+        </div>
+        <div class="actions-footer">
+          <button class="btn btn-outline" id="clear-actions">Clear</button>
+          <button class="btn btn-primary" id="approve-all-btn">Approve All</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="app.js?v=24"></script>
+
+
+  <!-- AAS_TABLEAU_GUARD_V18: BEGIN -->
+  <style>
+    #aas-tableau-banner {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      z-index: 9999;
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(25, 30, 40, 0.92);
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    #aas-tableau-banner .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    #aas-tableau-banner .msg {
+      line-height: 1.3;
+      font-size: 14px;
+      opacity: 0.95;
+    }
+
+    #aas-tableau-banner .btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    #aas-tableau-banner button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #aas-tableau-banner button.primary {
+      background: #4c8dff;
+      color: #fff;
+    }
+
+    #aas-tableau-banner button.secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    #aas-tableau-banner button.ghost {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.85);
+    }
+  </style>
+
+  <div id="aas-tableau-banner" role="alert">
+    <div class="row">
+      <div class="msg">
+        <strong>Tableau didn’t finish loading.</strong>
+        Your Tableau session may have expired. Click <b>Open in new tab</b> to sign in, then come back and hit
+        <b>Retry</b>.
+      </div>
+      <div class="btns">
+        <button id="aas-tableau-open" class="primary">Open in new tab</button>
+        <button id="aas-tableau-retry" class="secondary">Retry</button>
+        <button id="aas-tableau-dismiss" class="ghost">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const LOAD_TIMEOUT_MS = 8000;
+
+      function isLikelyLogin(url) {
+        if (!url) return false;
+        const u = String(url).toLowerCase();
+        return u.includes("/signin") || u.includes("/login") || u.includes("auth") || u.includes("sso");
+      }
+
+      function findTableauIframe() {
+        const iframes = Array.from(document.querySelectorAll("iframe"));
+        const bySrc = iframes.find(f => (f.getAttribute("src") || "").includes("tableau"));
+        if (bySrc) return bySrc;
+
+        const container = document.querySelector("#tableau, #tableau-container, #dashboard, .dashboard, .insight, .insight-dashboard");
+        if (container) {
+          const f = container.querySelector("iframe");
+          if (f) return f;
+        }
+        return iframes[0] || null;
+      }
+
+      function ensureBannerParent() {
+        const frame = findTableauIframe();
+        const banner = document.getElementById("aas-tableau-banner");
+        if (!banner) return null;
+
+        let parent = frame ? frame.parentElement : document.body;
+        if (!parent) parent = document.body;
+
+        const style = window.getComputedStyle(parent);
+        if (style.position === "static") {
+          parent.style.position = "relative";
+        }
+        if (!banner.parentElement || banner.parentElement !== parent) {
+          parent.appendChild(banner);
+        }
+        return frame;
+      }
+
+      function showBanner(openUrl, retryFn) {
+        const banner = document.getElementById("aas-tableau-banner");
+        if (!banner) return;
+        banner.style.display = "block";
+
+        const openBtn = document.getElementById("aas-tableau-open");
+        const retryBtn = document.getElementById("aas-tableau-retry");
+        const dismissBtn = document.getElementById("aas-tableau-dismiss");
+
+        if (openBtn) {
+          openBtn.onclick = () => { if (openUrl) window.open(openUrl, "_blank", "noopener,noreferrer"); };
+        }
+        if (retryBtn) {
+          retryBtn.onclick = () => { if (retryFn) retryFn(); };
+        }
+        if (dismissBtn) {
+          dismissBtn.onclick = () => { banner.style.display = "none"; };
+        }
+      }
+
+      function hideBanner() {
+        const banner = document.getElementById("aas-tableau-banner");
+        if (!banner) return;
+        banner.style.display = "none";
+      }
+
+      function attachGuard() {
+        const frame = ensureBannerParent();
+        if (!frame) return;
+
+        let timer = null;
+        let lastSrc = frame.getAttribute("src") || "";
+
+        function startLoadGuard(src) {
+          hideBanner();
+          if (timer) { clearTimeout(timer); timer = null; }
+
+          if (isLikelyLogin(src)) {
+            showBanner(src, () => { frame.setAttribute("src", src); startLoadGuard(src); });
+            return;
+          }
+
+          timer = setTimeout(() => {
+            showBanner(src, () => { frame.setAttribute("src", src); startLoadGuard(src); });
+          }, LOAD_TIMEOUT_MS);
+        }
+
+        frame.addEventListener("load", () => {
+          if (timer) { clearTimeout(timer); timer = null; }
+          hideBanner();
+        }, { passive: true });
+
+        frame.addEventListener("error", () => {
+          if (timer) { clearTimeout(timer); timer = null; }
+          const src = frame.getAttribute("src") || "";
+          showBanner(src, () => { frame.setAttribute("src", src); startLoadGuard(src); });
+        }, { passive: true });
+
+        const obs = new MutationObserver(() => {
+          const src = frame.getAttribute("src") || "";
+          if (src && src !== lastSrc) {
+            lastSrc = src;
+            startLoadGuard(src);
+          }
+        });
+        obs.observe(frame, { attributes: true, attributeFilter: ["src"] });
+
+        if (lastSrc) {
+          startLoadGuard(lastSrc);
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", attachGuard);
+      } else {
+        attachGuard();
+      }
+    })();
+  </script>
+  <!-- AAS_TABLEAU_GUARD_V18: END -->
+
+  <!-- AAS TABLEAU IFRAME GUARD+ v19 -->
+  <script>
+    (function () {
+      const BANNER_ID = "aas-tableau-guard-banner-v19";
+
+      function looksLikeTableau(url) {
+        try {
+          const u = new URL(url, window.location.href);
+          return /tableau\.com$/i.test(u.hostname) || /tableau/i.test(u.hostname);
+        } catch { return false; }
+      }
+
+      function looksLikeView(url) {
+        try {
+          const u = new URL(url, window.location.href);
+          return /\/views\//i.test(u.pathname);
+        } catch { return false; }
+      }
+
+      function ensureBanner() {
+        let el = document.getElementById(BANNER_ID);
+        if (el) return el;
+
+        el = document.createElement("div");
+        el.id = BANNER_ID;
+        el.style.position = "absolute";
+        el.style.top = "12px";
+        el.style.left = "12px";
+        el.style.right = "12px";
+        el.style.zIndex = "9999";
+        el.style.padding = "12px 14px";
+        el.style.borderRadius = "10px";
+        el.style.background = "rgba(20, 24, 33, 0.92)";
+        el.style.backdropFilter = "blur(6px)";
+        el.style.color = "#fff";
+        el.style.fontFamily = "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+        el.style.fontSize = "14px";
+        el.style.display = "none";
+        el.style.boxShadow = "0 10px 30px rgba(0,0,0,0.35)";
+
+        el.innerHTML = `
+      <div style="display:flex; gap:12px; align-items:flex-start; justify-content:space-between;">
+        <div style="line-height:1.3;">
+          <div style="font-weight:700; margin-bottom:4px;">Tableau embed needs attention</div>
+          <div style="opacity:0.9;">
+            Tableau didn’t load as an embeddable view. This usually means the API is offline or the URL points to the Tableau site root.
+          </div>
+          <div id="${BANNER_ID}-url" style="margin-top:6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; opacity:0.8; word-break:break-all;"></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <button id="${BANNER_ID}-open" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer;">Open in new tab</button>
+          <button id="${BANNER_ID}-retry" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer;">Retry</button>
+          <button id="${BANNER_ID}-dismiss" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer;">Dismiss</button>
+        </div>
+      </div>
+    `;
+
+        document.body.appendChild(el);
+        el.querySelector(`#${BANNER_ID}-dismiss`).addEventListener("click", () => { el.style.display = "none"; });
+        return el;
+      }
+
+      function showBanner(badUrl) {
+        const el = ensureBanner();
+        el.querySelector(`#${BANNER_ID}-url`).textContent = badUrl || "";
+
+        el.querySelector(`#${BANNER_ID}-open`).onclick = () => {
+          if (badUrl) window.open(badUrl, "_blank", "noopener,noreferrer");
+        };
+
+        el.querySelector(`#${BANNER_ID}-retry`).onclick = () => {
+          const runBtn = Array.from(document.querySelectorAll("button"))
+            .find(b => /run pipeline audit/i.test(b.textContent || ""));
+          if (runBtn) runBtn.click();
+          else window.location.reload();
+        };
+
+        el.style.display = "block";
+      }
+
+      function findVizIframe() {
+        const iframes = Array.from(document.querySelectorAll("iframe"));
+        if (!iframes.length) return null;
+
+        // Heuristic: pick largest iframe (likely the viz)
+        let best = null, bestArea = -1;
+        for (const f of iframes) {
+          const r = f.getBoundingClientRect();
+          const area = Math.max(0, r.width) * Math.max(0, r.height);
+          if (area > bestArea) { best = f; bestArea = area; }
+        }
+        return best;
+      }
+
+      function scrubBadTableauSrc(iframe, src) {
+        if (!src) return false;
+        if (!looksLikeTableau(src)) return false;
+        if (looksLikeView(src)) return false;
+
+        console.warn("[AAS v19] Blocking non-view Tableau iframe src:", src);
+        iframe.src = "about:blank"; // prevents X-Frame-Options refusal spam
+        showBanner(src);
+        return true;
+      }
+
+      function attachToIframe(iframe) {
+        scrubBadTableauSrc(iframe, iframe.getAttribute("src") || iframe.src);
+
+        const mo = new MutationObserver(() => {
+          const src = iframe.getAttribute("src") || iframe.src;
+          scrubBadTableauSrc(iframe, src);
+        });
+        mo.observe(iframe, { attributes: true, attributeFilter: ["src"] });
+      }
+
+      function init() {
+        const iframe = findVizIframe();
+        if (!iframe) return;
+
+        attachToIframe(iframe);
+
+        // If iframe gets replaced, re-init.
+        const mo2 = new MutationObserver(() => {
+          const next = findVizIframe();
+          if (next && next !== iframe) init();
+        });
+        mo2.observe(document.body, { childList: true, subtree: true });
+      }
+
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+      else init();
+    })();
+  </script>
+  <!-- /AAS TABLEAU IFRAME GUARD+ v19 -->
+
+
+
+  <!-- AAS_FILE_PROTOCOL_GUARD_V20: BEGIN -->
+  <style>
+    #aas-file-protocol-guard {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 10000;
+      display: none;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(25, 30, 40, 0.94);
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+    }
+
+    #aas-file-protocol-guard .row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    #aas-file-protocol-guard .msg {
+      font-size: 14px;
+      line-height: 1.35;
+      opacity: 0.96;
+    }
+
+    #aas-file-protocol-guard .btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    #aas-file-protocol-guard button {
+      border: 0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #aas-file-protocol-guard button.primary {
+      background: #4c8dff;
+      color: #fff;
+    }
+
+    #aas-file-protocol-guard button.secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    #aas-file-protocol-guard code {
+      background: rgba(255, 255, 255, 0.10);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+  </style>
+
+  <div id="aas-file-protocol-guard" role="alert">
+    <div class="row">
+      <div class="msg">
+        <strong>Heads up:</strong> You opened this page via <code>file://</code>. That breaks fetch/CORS and Tableau
+        embeds (origin becomes <code>null</code>).
+        <br />
+        Please run the demo over HTTP (recommended: <code>http://localhost:5173/index.html</code>).
+      </div>
+      <div class="btns">
+        <button id="aas-open-http" class="primary">Open HTTP demo</button>
+        <button id="aas-dismiss-http" class="secondary">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const target = "http://localhost:5173/index.html";
+
+      function show() {
+        const el = document.getElementById("aas-file-protocol-guard");
+        if (!el) return;
+        el.style.display = "block";
+
+        const open = document.getElementById("aas-open-http");
+        const dismiss = document.getElementById("aas-dismiss-http");
+        if (open) open.onclick = () => window.open(target, "_blank", "noopener,noreferrer");
+        if (dismiss) dismiss.onclick = () => { el.style.display = "none"; };
+      }
+
+      if (window.location && window.location.protocol === "file:") {
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", show);
+        } else {
+          show();
+        }
+      }
+    })();
+  </script>
+  <!-- AAS_FILE_PROTOCOL_GUARD_V20: END -->
+
+</body>
+
+</html>

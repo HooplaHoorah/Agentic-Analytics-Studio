@@ -1,0 +1,134 @@
+<!-- AAS TABLEAU IFRAME GUARD+ v19 -->
+<script>
+(function () {
+  const BANNER_ID = "aas-tableau-guard-banner-v19";
+
+  function looksLikeTableau(url) {
+    try {
+      const u = new URL(url, window.location.href);
+      return /tableau\.com$/i.test(u.hostname) || /tableau/i.test(u.hostname);
+    } catch { return false; }
+  }
+
+  function looksLikeView(url) {
+    try {
+      const u = new URL(url, window.location.href);
+      return /\/views\//i.test(u.pathname);
+    } catch { return false; }
+  }
+
+  function ensureBanner() {
+    let el = document.getElementById(BANNER_ID);
+    if (el) return el;
+
+    el = document.createElement("div");
+    el.id = BANNER_ID;
+    el.style.position = "absolute";
+    el.style.top = "12px";
+    el.style.left = "12px";
+    el.style.right = "12px";
+    el.style.zIndex = "9999";
+    el.style.padding = "12px 14px";
+    el.style.borderRadius = "10px";
+    el.style.background = "rgba(20, 24, 33, 0.92)";
+    el.style.backdropFilter = "blur(6px)";
+    el.style.color = "#fff";
+    el.style.fontFamily = "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif";
+    el.style.fontSize = "14px";
+    el.style.display = "none";
+    el.style.boxShadow = "0 10px 30px rgba(0,0,0,0.35)";
+
+    el.innerHTML = `
+      <div style="display:flex; gap:12px; align-items:flex-start; justify-content:space-between;">
+        <div style="line-height:1.3;">
+          <div style="font-weight:700; margin-bottom:4px;">Tableau embed needs attention</div>
+          <div style="opacity:0.9;">
+            Tableau didn’t load as an embeddable view. This usually means the API is offline or the URL points to the Tableau site root.
+          </div>
+          <div id="${BANNER_ID}-url" style="margin-top:6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; opacity:0.8; word-break:break-all;"></div>
+        </div>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <button id="${BANNER_ID}-open" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer;">Open in new tab</button>
+          <button id="${BANNER_ID}-retry" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer;">Retry</button>
+          <button id="${BANNER_ID}-dismiss" style="padding:8px 10px; border-radius:8px; border:1px solid rgba(255,255,255,0.25); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer;">Dismiss</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(el);
+    el.querySelector(`#${BANNER_ID}-dismiss`).addEventListener("click", () => { el.style.display = "none"; });
+    return el;
+  }
+
+  function showBanner(badUrl) {
+    const el = ensureBanner();
+    el.querySelector(`#${BANNER_ID}-url`).textContent = badUrl || "";
+
+    el.querySelector(`#${BANNER_ID}-open`).onclick = () => {
+      if (badUrl) window.open(badUrl, "_blank", "noopener,noreferrer");
+    };
+
+    el.querySelector(`#${BANNER_ID}-retry`).onclick = () => {
+      const runBtn = Array.from(document.querySelectorAll("button"))
+        .find(b => /run pipeline audit/i.test(b.textContent || ""));
+      if (runBtn) runBtn.click();
+      else window.location.reload();
+    };
+
+    el.style.display = "block";
+  }
+
+  function findVizIframe() {
+    const iframes = Array.from(document.querySelectorAll("iframe"));
+    if (!iframes.length) return null;
+
+    // Heuristic: pick largest iframe (likely the viz)
+    let best = null, bestArea = -1;
+    for (const f of iframes) {
+      const r = f.getBoundingClientRect();
+      const area = Math.max(0, r.width) * Math.max(0, r.height);
+      if (area > bestArea) { best = f; bestArea = area; }
+    }
+    return best;
+  }
+
+  function scrubBadTableauSrc(iframe, src) {
+    if (!src) return false;
+    if (!looksLikeTableau(src)) return false;
+    if (looksLikeView(src)) return false;
+
+    console.warn("[AAS v19] Blocking non-view Tableau iframe src:", src);
+    iframe.src = "about:blank"; // prevents X-Frame-Options refusal spam
+    showBanner(src);
+    return true;
+  }
+
+  function attachToIframe(iframe) {
+    scrubBadTableauSrc(iframe, iframe.getAttribute("src") || iframe.src);
+
+    const mo = new MutationObserver(() => {
+      const src = iframe.getAttribute("src") || iframe.src;
+      scrubBadTableauSrc(iframe, src);
+    });
+    mo.observe(iframe, { attributes: true, attributeFilter: ["src"] });
+  }
+
+  function init() {
+    const iframe = findVizIframe();
+    if (!iframe) return;
+
+    attachToIframe(iframe);
+
+    // If iframe gets replaced, re-init.
+    const mo2 = new MutationObserver(() => {
+      const next = findVizIframe();
+      if (next && next !== iframe) init();
+    });
+    mo2.observe(document.body, { childList: true, subtree: true });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+<!-- /AAS TABLEAU IFRAME GUARD+ v19 -->
