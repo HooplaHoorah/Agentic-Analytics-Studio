@@ -6,9 +6,9 @@ const API_BASE = (location.hostname === 'localhost' || location.hostname === '12
     : '/api';
 
 // Config
-// ?tableau=cloud -> attempts Connected App (JWT) + API view listing
-// ?tableau=public -> defaults to public URL (safe demo)
-const TABLEAU_MODE = new URLSearchParams(window.location.search).get('tableau') || 'public';
+// ?tableau=cloud  -> Connected App (JWT) embed (LIVE data dashboard)
+// ?tableau=public -> Tableau Public fallback (safe demo)
+const TABLEAU_MODE = new URLSearchParams(window.location.search).get('tableau') || 'cloud';
 
 // Fallback/Default Public URL
 const TABLEAU_PUBLIC_DEFAULT_URL = "https://public.tableau.com/views/Superstore_24/Overview?:showVizHome=no&:embed=true";
@@ -82,6 +82,7 @@ let currentViz = null;
 const actionsList = document.getElementById('actions-list');
 const runBtn = document.getElementById('run-pipeline-btn');
 const approveAllBtn = document.getElementById('approve-all-btn');
+const clearActionsBtn = document.getElementById('clear-actions');
 const actionCountBadge = document.getElementById('action-count');
 const vizContainer = document.getElementById('tableau-viz');
 
@@ -223,11 +224,15 @@ async function fetchContextActions(filters = {}) {
     try {
         const resp = await fetch(`${API_BASE}/context/actions?${params.toString()}`);
         const data = await resp.json();
-        renderActions(data.actions || [], data.filters);
+        const actions = data.actions || [];
+        renderActions(actions, data.filters);
+        return actions;
     } catch (e) {
         console.error("Failed to fetch context actions", e);
+        return null;
     }
 }
+
 
 
 // --- 4. Action Panel Logic ---
@@ -309,8 +314,8 @@ runBtn.addEventListener('click', async () => {
         // Update runs metadata
         runMetadata = { run_id: data.run_id };
 
-        // Render actions
-        renderActions(data.actions || []);
+        // Render actions from DB (source of truth for action_id/status)
+        await fetchContextActions();
 
         // Refresh viz (to see the "new" run data ideally)
         setTimeout(refreshViz, 1000);
@@ -341,9 +346,14 @@ async function approveActions(actions) {
         const result = await response.json();
         console.log("Approvals processed:", result);
 
-        // Remove approved from view
-        pendingActions = pendingActions.filter(a => !actions.includes(a));
-        renderActions(pendingActions);
+        // Refresh actions from DB (source of truth)
+        try {
+            await fetchContextActions();
+        } catch (e) {
+            // Fallback: remove approved from local view
+            pendingActions = pendingActions.filter(a => !actions.includes(a));
+            renderActions(pendingActions);
+        }
 
         // Refresh viz (to show "fixed" state)
         setTimeout(refreshViz, 1000);
@@ -358,8 +368,15 @@ approveAllBtn.addEventListener('click', () => {
     approveActions(pendingActions);
 });
 
+if (clearActionsBtn) {
+    clearActionsBtn.addEventListener('click', () => {
+        fetchContextActions();
+    });
+}
+
 
 // Start
 checkStatus();
 loadTableauView();
 setInterval(checkStatus, 15000);
+fetchContextActions();
