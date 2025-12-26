@@ -193,8 +193,15 @@ function safeGetField(marks, fieldName) {
 
             // 1) exact (case-insensitive)
             let colIdx = cols.findIndex(c => String(c.fieldName || '').toLowerCase() === want);
-            // 2) partial (case-insensitive)
-            if (colIdx === -1) colIdx = cols.findIndex(c => String(c.fieldName || '').toLowerCase().includes(want));
+
+            // 2) partial (case-insensitive) -- BUT skip if it looks like a measure/age
+            if (colIdx === -1) {
+                colIdx = cols.findIndex(c => {
+                    const fname = String(c.fieldName || '').toLowerCase();
+                    return fname.includes(want) && !fname.includes('age') && !fname.includes('days');
+                });
+            }
+
             if (colIdx === -1) continue;
 
             const values = [];
