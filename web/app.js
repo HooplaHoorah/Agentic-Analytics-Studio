@@ -77,6 +77,7 @@ async function renderTableauCloudViz(containerEl) {
 let pendingActions = [];
 let runMetadata = null;
 let currentViz = null;
+let lastFilters = {};
 
 // UI Elements
 const actionsList = document.getElementById('actions-list');
@@ -216,18 +217,25 @@ async function onMarkSelectionChanged(e) {
         const marks = await e.detail.getMarksAsync();
         if (marks.data.length === 0) {
             // Cleared selection -> Reset actions to pending
+            lastFilters = {};
             fetchContextActions();
             return;
         }
 
-        // Try standard fields
+        // Try standard fields (exact field-name matches only)
+        const segment = safeGetField(marks, 'Segment');
         const region = safeGetField(marks, 'Region');
         const owner = safeGetField(marks, 'Owner');
         const stage = safeGetField(marks, 'Stage');
-        const segment = safeGetField(marks, 'Segment');
 
-        console.log("Context selected:", { region, owner, stage, segment });
-        fetchContextActions({ region, owner, stage, segment });
+        // Ignore selections that only include measures (e.g., 'Stage Age Days')
+        if (!segment && !region && !owner && !stage) {
+            console.log('Selection contained no supported dimension fields; ignoring.');
+            return;
+        }
+
+        console.log('Context selected:', { segment, region, owner, stage });
+        fetchContextActions({ segment, region, owner, stage });
 
     } catch (err) {
         console.error("Error handling mark selection", err);
@@ -235,6 +243,7 @@ async function onMarkSelectionChanged(e) {
 }
 
 async function fetchContextActions(filters = {}) {
+    lastFilters = { ...filters };
     const params = new URLSearchParams();
     if (filters.region) params.set('region', filters.region);
     if (filters.owner) params.set('owner', filters.owner);
@@ -319,6 +328,14 @@ function renderActions(actions, activeFilters = null) {
             approveActions([pendingActions[idx]]);
         });
     });
+
+    actionsList.querySelectorAll('.ignore-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = Number(e.target.dataset.index);
+            pendingActions = pendingActions.filter((_, i) => i !== idx);
+            renderActions(pendingActions, lastFilters);
+        });
+    });
 }
 
 runBtn.addEventListener('click', async () => {
@@ -338,6 +355,7 @@ runBtn.addEventListener('click', async () => {
 
         // Render actions from DB (source of truth for action_id/status)
         await fetchContextActions();
+        lastFilters = {};
 
         // Refresh viz (to see the "new" run data ideally)
         setTimeout(refreshViz, 1000);
@@ -374,7 +392,7 @@ async function approveActions(actions) {
         } catch (e) {
             // Fallback: remove approved from local view
             pendingActions = pendingActions.filter(a => !actions.includes(a));
-            renderActions(pendingActions);
+            renderActions(pendingActions, lastFilters);
         }
 
         // Refresh viz (to show "fixed" state)
@@ -391,7 +409,14 @@ approveAllBtn.addEventListener('click', () => {
 });
 
 if (clearActionsBtn) {
-    clearActionsBtn.addEventListener('click', () => {
+    clearActionsBtn.addEventListener('click', async () => {
+        try {
+            // Clear any Tableau selection if supported by the component
+            if (currentViz?.clearSelectedMarksAsync) await currentViz.clearSelectedMarksAsync();
+        } catch (e) {
+            console.warn('Failed to clear Tableau selection', e);
+        }
+        lastFilters = {};
         fetchContextActions();
     });
 }
