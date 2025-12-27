@@ -326,6 +326,18 @@ function renderActions(actions, activeFilters = null) {
             </div>
         `;
         actionsList.appendChild(card);
+
+        // Make the entire card clickable: open the embed_url (if available) in a new tab.
+        // Ignore clicks on buttons to prevent interference with approve/ignore actions.
+        const embedUrl = (action.metadata && action.metadata.embed_url) || action.embed_url;
+        if (embedUrl) {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', (ev) => {
+                // If a button inside the card was clicked, do nothing.
+                if (ev.target.closest('button')) return;
+                window.open(embedUrl, '_blank');
+            });
+        }
     });
 
     // Wire buttons
