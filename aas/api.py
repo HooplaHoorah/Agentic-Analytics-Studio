@@ -439,7 +439,27 @@ def context_actions(
         
         out = []
         for r in rows:
-            out.append({
+            # Robustly parse the payload/metadata column.  Historically this was stored
+            # as a JSON string, but some rows may contain a dict or bytes.  Avoid
+            # blindly calling json.loads on non-string values to prevent runtime errors.
+            payload_val = r[10]
+            meta_json: Dict[str, Any] = {}
+            try:
+                if isinstance(payload_val, dict):
+                    # Already a dict – use it directly
+                    meta_json = payload_val
+                elif isinstance(payload_val, (bytes, bytearray)):
+                    # Decode bytes then load JSON
+                    meta_json = json.loads(payload_val.decode("utf-8"))
+                elif isinstance(payload_val, str):
+                    meta_json = json.loads(payload_val) if payload_val else {}
+                else:
+                    meta_json = {}
+            except Exception:
+                # If parsing fails for any reason, fall back to empty dict
+                meta_json = {}
+
+            action_record = {
                 "action_id": r[0],  # Important: frontend needs this to approve back specific items
                 "type": r[1],
                 "title": r[2],
@@ -450,10 +470,14 @@ def context_actions(
                 "segment": r[7],
                 "stage": r[8],
                 "opportunity_id": r[9],
-                "metadata": json.loads(r[10]) if r[10] else {},
-                # Flatten metadata for easier frontend usage if needed, or keep distinct
-                ** (json.loads(r[10]) if r[10] else {}) 
-            })
+                "metadata": meta_json,
+            }
+            # Flatten metadata for easier frontend usage if needed.  Only extend with
+            # keys from a dict to avoid TypeError from **None/str
+            if isinstance(meta_json, dict):
+                action_record.update(meta_json)
+
+            out.append(action_record)
         
         conn.close()
         return {"actions": out, "filters": {"region": region, "owner": owner, "stage": stage, "segment": segment}}
