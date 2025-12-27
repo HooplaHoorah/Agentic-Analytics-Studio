@@ -17,15 +17,16 @@ const TABLEAU_PUBLIC_DEFAULT_URL = "https://public.tableau.com/views/Superstore_
 // --- New Helpers from INSTRUCTIONS30 ---
 
 async function ensureTableauEmbeddingApi() {
-    if (window.customElements?.get("tableau-viz")) return;
-
-    await new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.type = "module";
-        s.src = "https://public.tableau.com/javascripts/api/tableau.embedding.3.latest.min.js";
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
+    if (window.customElements?.get('tableau-viz')) return;
+    await new Promise((resolve) => {
+        const check = () => {
+            if (window.customElements?.get('tableau-viz')) {
+                resolve();
+            } else {
+                setTimeout(check, 100);
+            }
+        };
+        check();
     });
 }
 
