@@ -78,6 +78,7 @@ let pendingActions = [];
 let runMetadata = null;
 let currentViz = null;
 let lastFilters = {};
+let currentPlay = 'pipeline';
 
 // UI Elements
 const actionsList = document.getElementById('actions-list');
@@ -86,6 +87,7 @@ const approveAllBtn = document.getElementById('approve-all-btn');
 const clearActionsBtn = document.getElementById('clear-actions');
 const actionCountBadge = document.getElementById('action-count');
 const vizContainer = document.getElementById('tableau-viz');
+const playSelect = document.getElementById('play-select');
 
 
 // --- 1. Init & Status ---
@@ -107,7 +109,7 @@ async function checkStatus() {
 
 async function getTableauToken() {
     try {
-        const resp = await fetch(`${API_BASE}/tableau/jwt`);
+        const resp = await fetch(`${API_BASE}/tableau/jwt?play=${currentPlay}`);
         if (!resp.ok) return null;
         const data = await resp.json();
         return data.token;
@@ -115,6 +117,47 @@ async function getTableauToken() {
         console.warn("Failed to fetch Tableau token", e);
         return null;
     }
+}
+
+async function renderTableauCloudViz(containerEl) {
+    await ensureTableauEmbeddingApi();
+
+    const r = await fetch(`${API_BASE}/tableau/jwt?play=${currentPlay}`);
+    if (!r.ok) throw new Error(`JWT endpoint failed: ${r.status}`);
+    const { token, vizUrl } = await r.json();
+
+    if (!vizUrl || !vizUrl.includes("/views/")) {
+        throw new Error(`Invalid vizUrl returned (missing /views/): ${vizUrl}`);
+    }
+
+    // Clear container
+    containerEl.innerHTML = "";
+
+    // Create web component
+    const viz = document.createElement("tableau-viz");
+    viz.id = "aasViz";
+    // Attributes must be set before appending or before src is set for best reliability
+    viz.setAttribute("toolbar", "hidden");
+    viz.setAttribute("hide-tabs", "");
+
+    // Style it to fill container
+    viz.style.width = '100%';
+    viz.style.height = '100%';
+
+    containerEl.appendChild(viz);
+
+    // Apply src + token
+    viz.src = vizUrl;
+    viz.token = token;
+
+    // Add event listener for bi-directional context
+    // Note: Using string 'firstinteractive' instead of TableauEventType for dynamic loading safety
+    viz.addEventListener('firstinteractive', () => {
+        console.log("Tableau Cloud Viz Loaded & Interactive");
+        viz.addEventListener('markselectionchanged', onMarkSelectionChanged);
+    });
+
+    return viz;
 }
 
 async function loadTableauView() {
@@ -252,6 +295,7 @@ async function onMarkSelectionChanged(e) {
 async function fetchContextActions(filters = {}) {
     lastFilters = { ...filters };
     const params = new URLSearchParams();
+    params.set('play', currentPlay);
     if (filters.region) params.set('region', filters.region);
     if (filters.owner) params.set('owner', filters.owner);
     if (filters.stage) params.set('stage', filters.stage);
@@ -362,7 +406,7 @@ runBtn.addEventListener('click', async () => {
     runBtn.textContent = 'Analyzing...';
 
     try {
-        const response = await fetch(`${API_BASE}/run/pipeline`, {
+        const response = await fetch(`${API_BASE}/run/${currentPlay}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ params: {} })
@@ -384,9 +428,25 @@ runBtn.addEventListener('click', async () => {
         console.error(error);
     } finally {
         runBtn.disabled = false;
-        runBtn.textContent = 'Run Pipeline Audit';
+        const playLabel = playSelect ? playSelect.options[playSelect.selectedIndex].text : 'Pipeline Audit';
+        runBtn.textContent = `Run ${playLabel}`;
     }
 });
+
+if (playSelect) {
+    playSelect.addEventListener('change', async (e) => {
+        currentPlay = e.target.value;
+        const playLabel = playSelect.options[playSelect.selectedIndex].text;
+        runBtn.textContent = `Run ${playLabel}`;
+
+        // Reload Tableau View for the new play
+        await loadTableauView();
+
+        // Reset Actions
+        lastFilters = {};
+        fetchContextActions();
+    });
+}
 
 async function approveActions(actions) {
     if (actions.length === 0) return;

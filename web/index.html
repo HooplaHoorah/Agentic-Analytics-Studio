@@ -112,6 +112,12 @@
         <div class="panel-header">
           <span class="panel-title">Insight Dashboard</span>
           <div class="controls">
+            <!-- Play selector for multi-play hero workflow -->
+            <select id="play-select" class="play-select">
+              <option value="pipeline" selected>Pipeline Leakage</option>
+              <option value="churn">Churn Rescue</option>
+              <option value="spend">Spend Anomaly</option>
+            </select>
             <button class="btn btn-outline" id="run-pipeline-btn">Run Pipeline Audit</button>
           </div>
         </div>

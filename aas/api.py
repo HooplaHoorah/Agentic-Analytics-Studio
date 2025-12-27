@@ -399,38 +399,51 @@ def get_tableau_views():
         return {"status": "error", "message": str(e), "views": []}
 @app.get("/context/actions")
 def context_actions(
+    play: str = "pipeline",
     region: str | None = None,
     owner: str | None = None,
     stage: str | None = None,
     segment: str | None = None,
 ):
     """
-    Return pending actions filtered by business context (for Tableau integration).
+    Return pending actions filtered by business context (for Tableau integration) and play.
     """
     conn = get_conn()
     if not conn:
         return {"actions": [], "status": "no_db_configured"}
 
     try:
-        where = ["status IN ('pending', 'new')"]
+        # Filter by play via join to runs table
+        # We assume aas_pipeline_runs has (run_id, play) and aas_actions has (run_id)
+        # We alias aas_actions as 'a'
+        where = ["a.status IN ('pending', 'new')"]
         args = []
+        
+        # Filter by play
+        if play:
+            where.append("r.play = %s")
+            args.append(play)
+
         if region:
-            where.append("region = %s")
+            where.append("a.region = %s")
             args.append(region)
         if owner:
-            where.append("owner = %s")
+            where.append("a.owner = %s")
             args.append(owner)
         if stage:
-            where.append("stage = %s")
+            where.append("a.stage = %s")
             args.append(stage)
         if segment:
-            where.append("segment = %s")
+            where.append("a.segment = %s")
             args.append(segment)
 
         sql = (
-            "SELECT action_id, action_type, title, description, priority, owner, region, segment, stage, opportunity_id, payload "
-            "FROM aas_actions WHERE " + " AND ".join(where) +
-            " ORDER BY priority ASC, created_at DESC LIMIT 50"
+            "SELECT a.action_id, a.action_type, a.title, a.description, a.priority, "
+            "a.owner, a.region, a.segment, a.stage, a.opportunity_id, a.payload "
+            "FROM aas_actions a "
+            "JOIN aas_pipeline_runs r ON a.run_id = r.run_id "
+            "WHERE " + " AND ".join(where) +
+            " ORDER BY a.priority ASC, a.created_at DESC LIMIT 50"
         )
 
         with conn.cursor() as cur:
@@ -480,7 +493,7 @@ def context_actions(
             out.append(action_record)
         
         conn.close()
-        return {"actions": out, "filters": {"region": region, "owner": owner, "stage": stage, "segment": segment}}
+        return {"actions": out, "filters": {"region": region, "owner": owner, "stage": stage, "segment": segment, "play": play}}
 
     except Exception as e:
         return {"error": str(e)}
@@ -511,22 +524,26 @@ def _build_tableau_jwt(user: str) -> str:
 
 
 @app.get("/tableau/jwt")
-def tableau_jwt():
-    """Generate a valid JWT for Tableau Connected App embedding."""
+def tableau_jwt(play: str = "pipeline"):
+    """Generate a valid JWT for Tableau Connected App embedding, specific to the requested play."""
     user = os.getenv("TABLEAU_CONNECTED_APP_USERNAME", "aas_demo")
     
-    # 1. Get the configured Viz URL (Essential for Cloud Embed)
-    # Prefer explicit CLOUD URL, fallback to PUBLIC if needed (though public doesn't need JWT)
-    viz_url = os.getenv("TABLEAU_VIZ_URL_CLOUD")
+    # 1. Determine Viz URL based on play
+    viz_url = None
+    if play == "pipeline":
+        viz_url = os.getenv("TABLEAU_VIZ_URL_PIPELINE") or os.getenv("TABLEAU_VIZ_URL_CLOUD")
+    else:
+        # e.g. TABLEAU_VIZ_URL_CHURN, TABLEAU_VIZ_URL_SPEND
+        viz_url = os.getenv(f"TABLEAU_VIZ_URL_{play.upper()}")
     
     if not viz_url:
-        return {"status": "error", "message": "TABLEAU_VIZ_URL_CLOUD not set in environment"}
+        return {"status": "error", "message": f"TABLEAU_VIZ_URL_{play.upper()} not set in environment"}
 
     # 2. Sanity Check (Instruction 29)
     if "/views/" not in viz_url:
         print(f"Error: Invalid Tableau Viz URL configured: {viz_url}")
         # We return 500 or a clear error so frontend stops
-        raise HTTPException(status_code=500, detail="Misconfigured TABLEAU_VIZ_URL_CLOUD. Must contain '/views/'.")
+        raise HTTPException(status_code=500, detail=f"Misconfigured TABLEAU_VIZ_URL_{play.upper()}. Must contain '/views/'.")
 
     try:
         token = _build_tableau_jwt(user)

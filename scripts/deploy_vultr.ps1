@@ -28,6 +28,9 @@ TABLEAU_CONNECTED_APP_SECRET_VALUE="oJw/+UBTRDfkkv6AYquSyYLPZEntizwQWQxqGkeWmgE=
 TABLEAU_CONNECTED_APP_USERNAME="hooplahoorah@gmail.com"
 SLACK_BOT_TOKEN="xoxb-10168181986657-10162823619317-uqtFSrPzTzX9KX3BJeqdOVNw"
 TABLEAU_VIZ_URL_CLOUD="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
+TABLEAU_VIZ_URL_PIPELINE="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
+TABLEAU_VIZ_URL_CHURN="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
+TABLEAU_VIZ_URL_SPEND="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
 "@
 
 # Write env file safely (using specific echo to avoid pipe issues with special chars if any, but simplistic here)
