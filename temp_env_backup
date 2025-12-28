@@ -1,0 +1,14 @@
+# Copy to .env (repo root) and fill in
+# ==================================
+
+# Tableau Cloud
+TABLEAU_SERVER_URL=https://10ax.online.tableau.com
+TABLEAU_SITE_ID=agenticanalyticsstudio
+# New token created via browser automation
+TABLEAU_TOKEN_NAME=AAS-Agent-Fix
+TABLEAU_TOKEN_SECRET=2e+RYVgGQgmkoDm8obc65A==:HQudN47nhfe6iy2T4dIyIfFUOkqHZHDv
+
+# Slack
+SLACK_BOT_TOKEN=xoxb-10168181986657-10162823619317-uqtFSrPzTzX9KX3BJeqdOVNw
+# Optional
+AAS_SLACK_TEST_CHANNEL=#aas-test

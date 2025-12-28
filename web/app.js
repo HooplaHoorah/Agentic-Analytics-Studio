@@ -33,7 +33,7 @@ async function ensureTableauEmbeddingApi() {
 async function renderTableauCloudViz(containerEl) {
     await ensureTableauEmbeddingApi();
 
-    const r = await fetch(`${API_BASE}/tableau/jwt`);
+    const r = await fetch(`${API_BASE}/tableau/jwt?play=${currentPlay}`);
     if (!r.ok) throw new Error(`JWT endpoint failed: ${r.status}`);
     const { token, vizUrl } = await r.json();
 
@@ -48,7 +48,7 @@ async function renderTableauCloudViz(containerEl) {
     const viz = document.createElement("tableau-viz");
     viz.id = "aasViz";
     // Attributes must be set before appending or before src is set for best reliability
-    viz.setAttribute("toolbar", "bottom");
+    viz.setAttribute("toolbar", "hidden");
     viz.setAttribute("hide-tabs", "");
 
     // Style it to fill container
@@ -118,47 +118,6 @@ async function getTableauToken() {
         console.warn("Failed to fetch Tableau token", e);
         return null;
     }
-}
-
-async function renderTableauCloudViz(containerEl) {
-    await ensureTableauEmbeddingApi();
-
-    const r = await fetch(`${API_BASE}/tableau/jwt?play=${currentPlay}`);
-    if (!r.ok) throw new Error(`JWT endpoint failed: ${r.status}`);
-    const { token, vizUrl } = await r.json();
-
-    if (!vizUrl || !vizUrl.includes("/views/")) {
-        throw new Error(`Invalid vizUrl returned (missing /views/): ${vizUrl}`);
-    }
-
-    // Clear container
-    containerEl.innerHTML = "";
-
-    // Create web component
-    const viz = document.createElement("tableau-viz");
-    viz.id = "aasViz";
-    // Attributes must be set before appending or before src is set for best reliability
-    viz.setAttribute("toolbar", "hidden");
-    viz.setAttribute("hide-tabs", "");
-
-    // Style it to fill container
-    viz.style.width = '100%';
-    viz.style.height = '100%';
-
-    containerEl.appendChild(viz);
-
-    // Apply src + token
-    viz.src = vizUrl;
-    viz.token = token;
-
-    // Add event listener for bi-directional context
-    // Note: Using string 'firstinteractive' instead of TableauEventType for dynamic loading safety
-    viz.addEventListener('firstinteractive', () => {
-        console.log("Tableau Cloud Viz Loaded & Interactive");
-        viz.addEventListener('markselectionchanged', onMarkSelectionChanged);
-    });
-
-    return viz;
 }
 
 async function loadTableauView() {
@@ -402,7 +361,8 @@ function renderActions(actions, activeFilters = null) {
     });
 }
 
-runBtn.addEventListener('click', async () => {
+// Global click handler for run button to avoid binding issues
+window.runPipeline = async () => {
     runBtn.disabled = true;
     runBtn.textContent = 'Analyzing...';
 
@@ -432,7 +392,9 @@ runBtn.addEventListener('click', async () => {
         const playLabel = playSelect ? playSelect.options[playSelect.selectedIndex].text : 'Pipeline Audit';
         runBtn.textContent = `Run ${playLabel}`;
     }
-});
+};
+
+runBtn.addEventListener('click', window.runPipeline);
 
 if (playSelect) {
     playSelect.addEventListener('change', async (e) => {
