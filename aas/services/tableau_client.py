@@ -69,10 +69,13 @@ class TableauClient:
                 base = self.server_url.rstrip('/')
                 for v in all_views:
                     # Construct the embed URL standard for Tableau Cloud/Server
+                    # FIX: remove 'sheets/' from content_url to prevent 404s
+                    clean_content_url = v.content_url.replace("sheets/", "")
+                    
                     if self.site_id:
-                        embed_url = f"{base}/t/{self.site_id}/views/{v.content_url}?:showVizHome=no"
+                        embed_url = f"{base}/t/{self.site_id}/views/{clean_content_url}?:showVizHome=no"
                     else:
-                        embed_url = f"{base}/views/{v.content_url}?:showVizHome=no"
+                        embed_url = f"{base}/views/{clean_content_url}?:showVizHome=no"
                     
                     views_list.append({
                         "id": v.id,
