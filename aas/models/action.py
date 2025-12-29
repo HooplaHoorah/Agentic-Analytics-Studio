@@ -24,6 +24,8 @@ class Action:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     title: str = ""
     priority: str = "medium"
+    impact_score: float = 0.0
+    reasoning: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         """Return a JSON‑serialisable representation of the action."""
@@ -34,4 +36,6 @@ class Action:
             "description": self.description,
             "priority": self.priority,
             "metadata": self.metadata,
+            "impact_score": self.impact_score,
+            "reasoning": self.reasoning,
         }

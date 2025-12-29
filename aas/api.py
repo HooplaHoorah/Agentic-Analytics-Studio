@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import json
+import csv
 from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone, timedelta
@@ -15,7 +16,7 @@ from dotenv import load_dotenv
 
 # Load .env from project root
 _env_path = Path(__file__).parent.parent / ".env"
-load_dotenv(_env_path)
+load_dotenv(_env_path, override=True)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -40,9 +41,21 @@ except Exception:
 app = FastAPI(title="Agentic Analytics Studio API", version="0.1.0")
 
 # Dev-friendly CORS (lock down later)
+# Note: allow_origins=["*"] conflicts with allow_credentials=True, so we must list explicit origins.
+origins = [
+    "http://localhost:8080",
+    "http://localhost:8081",
+    "http://localhost:8082",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8081",
+    "http://127.0.0.1:8082",
+    "http://localhost:5173",
+    "http://localhost:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -78,7 +91,10 @@ def _append_approval_log(record: Dict[str, Any]) -> None:
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok", 
+        "llm_provider": os.getenv("LLM_PROVIDER", "none").lower()
+    }
 
 
 @app.get("/plays")
@@ -256,7 +272,7 @@ def approve(req: ApproveRequest):
     approval_id = str(uuid4())
     ts = datetime.now(timezone.utc).isoformat()
 
-    # 1) Log Approvals
+    # 1) Log Approvals (JSONL)
     for action in req.actions:
         _append_approval_log(
             {
@@ -269,6 +285,27 @@ def approve(req: ApproveRequest):
                 "status": "approved",
             }
         )
+    
+    # 1b) Log Feedback (CSV) - Enhancement 4
+    try:
+        feedback_file = APPROVALS_DIR / "action_feedback_log.csv"
+        file_exists = feedback_file.exists()
+        with feedback_file.open("a", newline='', encoding="utf-8") as csvfile:
+            fieldnames = ["action_id", "approved", "timestamp", "approver", "run_id"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not file_exists:
+                writer.writeheader()
+            
+            for action in req.actions:
+                writer.writerow({
+                    "action_id": action.get("action_id") or action.get("id"),
+                    "approved": True,
+                    "timestamp": ts,
+                    "approver": req.approver,
+                    "run_id": req.run_id
+                })
+    except Exception as e:
+        print(f"Warning: Failed to log feedback CSV: {e}")
 
     # 2) Execute Actions
     execution_results = execute_actions(req.actions, run_id=req.run_id)
@@ -282,7 +319,7 @@ def approve(req: ApproveRequest):
             **result
         })
 
-    # --- DB UPDATE START ---
+    # ...
     try:
         conn = get_conn()
         if conn:

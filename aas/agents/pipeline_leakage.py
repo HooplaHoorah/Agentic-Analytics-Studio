@@ -20,13 +20,17 @@ from .base import AgentPlay
 from ..db import get_conn
 from ..models.action import Action
 from ..utils.logger import get_logger
-
+from ..services.salesforce_client import SalesforceClient
 
 logger = get_logger(__name__)
 
 
 class PipelineLeakageAgent(AgentPlay):
     """Agent that identifies at‑risk deals and proposes follow‑ups."""
+
+    def __init__(self):
+        super().__init__()
+        self.sf = SalesforceClient()
 
     def load_data(self) -> pd.DataFrame:
         """Load pipeline data.
@@ -91,6 +95,7 @@ class PipelineLeakageAgent(AgentPlay):
             * `stage_distribution`: distribution of deals by stage.
             * `drivers_of_slowdown`: key insights into pipeline bottlenecks.
             * `narrative`: human‑readable summary of findings.
+            * `metrics`: quantified impact metrics.
         """
         if data.empty:
             return {
@@ -104,6 +109,11 @@ class PipelineLeakageAgent(AgentPlay):
         for col in ["close_date", "last_touch_date"]:
             if col in data.columns:
                 data[col] = pd.to_datetime(data[col], errors="coerce")
+
+        if "amount" not in data.columns:
+            data["amount"] = 0.0
+        else:
+            data["amount"] = data["amount"].astype(float)
 
         # 1) Calculate Risk Score (0-100) and Reasons
         data["risk_score"] = 0.0
@@ -135,6 +145,24 @@ class PipelineLeakageAgent(AgentPlay):
                     data.at[idx, "reasons"].append("Close date slipped")
 
         data["risk_score"] = data["risk_score"].clip(0, 100)
+
+        # Filter out low risk (< 20 say) for impact analysis? Or just use "at risk" definition (score > 50)?
+        # Let's say highly stalled = score > 50
+        stalled_mask = data["risk_score"] > 50
+        stalled_df = data[stalled_mask]
+
+        # Impact Metrics
+        num_stalled = len(stalled_df)
+        value_at_risk = stalled_df["amount"].sum()
+        avg_days_stalled = stalled_df["stage_age"].mean() if "stage_age" in stalled_df.columns and not stalled_df.empty else 0
+        expected_recovered = value_at_risk * 0.7  # Assumption: can save 70%
+
+        metrics = {
+            "num_stalled_opportunities": int(num_stalled),
+            "value_at_risk": float(value_at_risk),
+            "avg_days_stalled": float(round(avg_days_stalled, 1)),
+            "expected_revenue_recovered": float(expected_recovered)
+        }
 
         # 2) Drivers of slowdown summary
         drivers = {}
@@ -175,9 +203,9 @@ class PipelineLeakageAgent(AgentPlay):
         at_risk_list = at_risk_df[cols].to_dict(orient="records")
 
         narrative = (
-            f"Identified {len(at_risk_list)} deals at risk based on scoring which factors in "
-            f"stage age, activity gaps, and close date slippage. "
-            f"Top drivers of slowdown include stages: {', '.join(drivers.get('slowest_stages', {}).keys())}."
+            f"Identified {len(at_risk_list)} deals at risk seeking attention. "
+            f"Total value at risk is ${value_at_risk:,.0f} across {num_stalled} stalled opportunities. "
+            f"Top drivers include stages: {', '.join(drivers.get('slowest_stages', {}).keys())}."
         )
 
         return {
@@ -185,6 +213,7 @@ class PipelineLeakageAgent(AgentPlay):
             "stage_distribution": stage_counts,
             "drivers_of_slowdown": drivers,
             "narrative": narrative,
+            "metrics": metrics,
             "visual_context": {
                 "view_name": "Superstore Overview",
                 "workbook": "Superstore",
@@ -203,16 +232,33 @@ class PipelineLeakageAgent(AgentPlay):
             segment = deal.get("segment")
             stage = deal.get("stage")
             score = deal.get("risk_score", 0)
+            amount = deal.get("amount", 0)
             reasons = ", ".join(deal.get("reasons", []))
+
+            # Trigger Salesforce Task Creation (REAL execution as requested per instruction)
+            sf_res = self.sf.create_task(
+                subject=f"Unblock Opportunity {opp_id}",
+                description=f"Risk Score: {score}. Reasons: {reasons}. Please investigate.",
+                owner_id=owner,  # In real life, convert Name -> ID or use current user
+                what_id=opp_id
+            )
+            created_task_id = sf_res.get("id")
+
+            # Generate AI Rationale
+            context = f"Opportunity {opp_id}: Stage {stage}, Age {deal.get('stage_age')} days, Amount ${amount}, Risk Score {score}. Reasons: {reasons}."
+            rationale = self.generate_rationale(context)
             
-            # 1) Salesforce Task
+            # 1) Salesforce Task Action
             actions.append(Action(
                 type="salesforce_task",
-                title=f"Unblock Opportunity {opp_id}",
-                description=f"Follow up with {owner} for {opp_id}. Risk factors: {reasons}",
+                title=f"Unblock Opportunity {opp_id} (${amount:,.0f})",
+                description=f"Salesforce Task {created_task_id} created. Follow up with {owner}. Risk: {reasons}",
                 priority="high" if score > 70 else "medium",
+                impact_score=float(amount),
+                reasoning=rationale,
                 metadata={
                     "opportunity_id": opp_id,
+                    "task_id": created_task_id,
                     "subject": f"Unstuck Deal: {opp_id}",
                     "owner": owner,
                     "region": region,
@@ -228,13 +274,18 @@ class PipelineLeakageAgent(AgentPlay):
                 title=f"Risk Alert: {opp_id}",
                 description=f"Alert sales-ops regarding high risk deal {opp_id} ({score}% risk).",
                 priority="medium",
+                impact_score=float(amount * 0.1), # Heuristic: notification value? 
+                reasoning=rationale,
                 metadata={
                     "channel": "sales-alerts",
-                    "text": f"⚠️ High risk deal {opp_id} is stalled. Score: {score}%. Factors: {reasons}",
+                    "text": f"⚠️ High risk deal {opp_id} (${amount:,.0f}) is stalled. Score: {score}%. Factors: {reasons}. Salesforce Task already created.",
                     "opportunity_id": opp_id,
                     "region": region,
                     "segment": segment,
                     "stage": stage,
                 }
             ))
+
+        # Sort actions by impact score descending
+        actions.sort(key=lambda x: x.impact_score, reverse=True)
         return actions

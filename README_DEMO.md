@@ -27,32 +27,34 @@ This document outlines the **Golden Path** for the demo presentation.
 
 ## 2. The Golden Path (Step-by-Step)
 
-### A. Run Analysis
+### A. Run Analysis (AI & Impact)
 1. Click **"Run Pipeline Audit"**.
-2. *Narrative*: "The agent analyzes 50,000+ Salesforce records and recent Slack chatter..."
+2. *Narrative*: "The agent analyzes 50,000+ records, identifies risks, and uses **Generative AI** to explain *why* each action is needed."
 3. **Verify**:
-   - ~10 Recommended Actions appear in the right panel.
-   - Badge says "10 PENDING".
+   - Badge updates (e.g., "10 PENDING").
+   - **Impact Scores**: High-value items are flagged (e.g. green "Impact: 0.98" badge).
+   - **AI Rationale**: Each card shows unique reasoning (e.g. "Deal stalling at Proposal stage...").
 
 ### B. Inspect & Context (Trust)
-1. Pick any action (preferably one labeled "Salesforce").
+1. Pick any action.
 2. Click **"View context in Tableau"**.
 3. *Narrative*: "The agent links the insight directly to the relevant dashboard view..."
 4. **Verify**:
-   - The Tableau dashboard refreshes/filters.
-   - **Crucial**: The iframe stays visible.
+   - The Tableau dashboard refreshes/filters to the specific **Region/Segment**.
 
-### C. Execution & Governance
+### C. Execution & Governance (Closed Loop)
 1. Click **"Approve All"**.
-2. Wait for the success alert: "Successfully executed 10 actions!"
-3. **Verify**:
-   - List clears ("0 PENDING").
-   - Audit trail is updated (backend).
+2. Wait for the success alert.
+3. *Narrative*: 
+   - "If Salesforce/Slack are connected, real tasks are created."
+   - "If not, the system runs in **Mock Mode**, simulating the API calls for demo reliability."
+4. **Verify**:
+   - List clears.
+   - `data/actions_feedback_log.csv` is updated (backend evidence).
 
-### D. Repeatability (Optional)
-1. Refresh the page (Cmd+R / F5).
-2. Click **"Run Pipeline Audit"** again.
-3. Verify actions repopulate immediately.
+### D. Repeatability
+1. Use the **Play Selector** (top left) to switch to "Churn Rescue".
+2. Run again to show multi-agent capability.
 
 ---
 

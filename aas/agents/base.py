@@ -72,3 +72,69 @@ class AgentPlay(abc.ABC):
             "analysis": analysis,
             "actions": actions_serialisable,
         }
+
+    def generate_rationale(self, context: str) -> str:
+        """Use LLM to generate rationale for an action."""
+        import os
+        import httpx
+        
+        provider = os.getenv("LLM_PROVIDER", "none").lower()
+        api_key = os.getenv("OPENAI_API_KEY")
+        
+        # 1. OpenAI Provider
+        if provider == "openai" and api_key:
+            try:
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"),
+                    "messages": [
+                        {"role": "system", "content": "You are an expert sales analyst. Briefly explain (1 sentence) why this action is critical based on the data provided."},
+                        {"role": "user", "content": context}
+                    ],
+                    "max_tokens": 60,
+                    "temperature": 0.7
+                }
+                # Use sync call with timeout
+                resp = httpx.post("https://api.openai.com/v1/chat/completions", json=payload, headers=headers, timeout=5.0)
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"].strip()
+                else:
+                    logger.warning(f"OpenAI Error {resp.status_code}: {resp.text}")
+                    return "AI Rationale: Optimization opportunity detected (OpenAI unavailable)."
+            except Exception as e:
+                logger.error(f"OpenAI Call failed: {e}")
+                return "AI Rationale: Optimization opportunity detected (OpenAI connection error)."
+
+        # 2. Ollama Provider
+        elif provider == "ollama":
+            base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/api")
+            model = os.getenv("OLLAMA_MODEL", "llama3")
+            try:
+                payload = {
+                    "model": model,
+                    "prompt": f"You are an expert sales analyst. Briefly explain (1 sentence) why this action is critical based on the data provided: {context}",
+                    "stream": False
+                }
+                resp = httpx.post(f"{base_url}/generate", json=payload, timeout=10.0)
+                if resp.status_code == 200:
+                    return resp.json().get("response", "").strip()
+                else:
+                    logger.warning(f"Ollama Error {resp.status_code}: {resp.text}")
+                    return "AI Rationale: Optimization opportunity detected (Ollama unavailable)."
+            except Exception as e:
+                logger.error(f"Ollama Call failed: {e}")
+                return "AI Rationale: Optimization opportunity detected (Ollama connection error)."
+
+        # 3. Fallback / None
+        else:
+            # Deterministic fallback based on context keywords
+            if "stage" in context.lower():
+                 return "AI Rationale: Deal stalling at current stage warrants immediate intervention."
+            elif "churn" in context.lower():
+                 return "AI Rationale: High churn risk detected based on usage patterns."
+            elif "spend" in context.lower():
+                 return "AI Rationale: Unusual spend velocity requires budget review."
+            return "AI Rationale: High impact opportunity identified based on current metrics."

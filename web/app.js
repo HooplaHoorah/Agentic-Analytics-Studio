@@ -97,7 +97,19 @@ async function checkStatus() {
     try {
         const res = await fetch(`${API_BASE}/health`);
         if (res.ok) {
+            const data = await res.json();
             document.getElementById('api-status').textContent = 'API: ONLINE';
+
+            // LLM Status
+            const llmBadge = document.getElementById('llm-status');
+            if (data.llm_provider && data.llm_provider !== 'none') {
+                llmBadge.style.display = 'inline-block';
+                // Capitalize first letter
+                const providerName = data.llm_provider.charAt(0).toUpperCase() + data.llm_provider.slice(1);
+                llmBadge.textContent = `LLM: ${providerName}`;
+            } else {
+                llmBadge.style.display = 'none';
+            }
         }
     } catch (e) {
         document.getElementById('api-status').textContent = 'API: OFFLINE';
@@ -321,9 +333,20 @@ function renderActions(actions, activeFilters = null) {
         const typeLabel = action.type === 'slack_message' ? 'Slack' : 'Salesforce';
 
         card.innerHTML = `
-            <div class="action-type ${typeClass}">${typeLabel}</div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div class="action-type ${typeClass}">${typeLabel}</div>
+                ${action.impact_score > 0 ? `<div style="font-size:0.7rem; color:#4ade80; background:rgba(74, 222, 128, 0.1); padding:2px 6px; border-radius:4px; border:1px solid rgba(74, 222, 128, 0.2);">Impact: ${action.impact_score.toFixed(2)}</div>` : ''}
+            </div>
             <div class="action-title">${action.title || 'Action'}</div>
             <div class="action-desc">${action.description}</div>
+            
+            ${action.reasoning ? `
+                <div style="margin-top:0.6rem; font-size:0.8rem; color:#94a3b8; background:rgba(255,255,255,0.03); padding:8px; border-radius:6px; border-left: 2px solid #8b5cf6;">
+                    <span style="display:block; font-size:0.7rem; text-transform:uppercase; opacity:0.7; margin-bottom:2px;">AI Rationale</span>
+                    ${action.reasoning}
+                </div>
+            ` : ''}
+
             <div style="display:flex; gap: 0.5rem; margin-top: 1rem;">
                 <button class="btn btn-outline ignore-btn" data-index="${index}" style="flex:1; padding: 0.4rem; font-size: 0.75rem;">Ignore</button>
                 <button class="btn btn-primary approve-single" data-index="${index}" style="flex:1; padding: 0.4rem; font-size: 0.75rem;">Approve</button>

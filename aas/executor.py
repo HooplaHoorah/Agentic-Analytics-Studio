@@ -23,10 +23,13 @@ def execute_actions(actions: List[Dict[str, Any]], run_id: str | None = None) ->
     results = []
     
     # Config check (from env vars as per instructions)
-    sf_user = os.getenv("SALESFORCE_USERNAME")
+    # Config check (from env vars as per instructions)
+    sf_user = os.getenv("SF_USERNAME")
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     
-    sf_client = SalesforceClient(username=sf_user) if sf_user else None
+    # Instantiate clients (they handle their own fallback auth internally usually, but we check presence to decide mode)
+    # We pass explicit None if not set so they can decide to fallback or error
+    sf_client = SalesforceClient()
     slack_client = SlackClient(bot_token=slack_token) if slack_token else None
     
     for action in actions:

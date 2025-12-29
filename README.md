@@ -8,12 +8,35 @@ This repository contains a **skeleton** implementation for the AAS hackathon pro
 For the hackathon demo runbook, see [README_DEMO.md](README_DEMO.md).
 
 ## Vision
-
 AAS enables business users to ask questions like **“Why are my deals slipping?”** and receive:
+1. **Analysis** – the agent clarifies assumptions, loads relevant data and generates metrics.
+2. **Recommendations** – suggested root causes, prioritised by **financial impact**, with **AI-generated rationales**.
+3. **Actions** – concrete follow‑ups such as creating tasks in Salesforce or sending alerts to Slack.
 
-1. **Analysis** – the agent clarifies assumptions, loads relevant data and generates metrics, charts and narratives.
-2. **Recommendations** – suggested root causes and prioritised lists (e.g. at‑risk opportunities) based on the analysis.
-3. **Actions** – concrete follow‑ups such as creating tasks in Salesforce, sending alerts to Slack or updating records.  
+## Features (v8 Submission)
+- **Multi-Play Support**: Pipeline Leakage, Churn Rescue, Spend Anomaly.
+- **LLM-Agnostic Engine**: Supports OpenAI, Ollama, or Rule-based fallback.
+- **Mock/Stub Mode**: Runs fully locally even without Salesforce credentials.
+- **Impact Scoring**: Actions are sorted by potential ROI.
+
+## 1. Setup & Configuration
+
+### Prerequisites
+- Python 3.10+
+- Node.js & npm (for serving frontend)
+- PostgreSQL (optional, defaults to local/mock if not set)
+
+### Environment Variables (.env)
+Copy `.env.example` to `.env` and configure:
+
+| Variable | Description |
+|---|---|
+| `LLM_PROVIDER` | `openai`, `ollama`, or `none`. |
+| `OPENAI_API_KEY` | Required if using OpenAI. |
+| `SF_USERNAME` | Salesforce Username (leave empty for Stub Mode). |
+| `SF_PASSWORD` | Salesforce Password. |
+| `SF_SECURITY_TOKEN` | Salesforce Security Token. |
+| `TABLEAU_CONNECTED_APP_...` | Required for embedding live dashboards. |  
 
 Unlike a dashboard, the Studio keeps context (datasets, decisions, actions) and provides guardrails (approvals, audit trails).  
 
