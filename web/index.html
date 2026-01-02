@@ -120,14 +120,15 @@
     </header>
 
     <!-- Impact Dashboard -->
-    <section class="impact-dashboard" id="impact-dashboard" style="display: none;">
+    <section class="impact-dashboard" id="impact-dashboard" style="display: none;" role="dialog" aria-modal="true"
+      aria-labelledby="impact-title">
       <div class="impact-header">
-        <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0;">📊 Impact Dashboard</h2>
+        <h2 id="impact-title" style="font-size: 1.125rem; font-weight: 600; margin: 0;">📊 Impact Dashboard</h2>
         <div style="display: flex; gap: 0.5rem;">
-          <button class="btn btn-outline btn-sm" id="export-impact-btn">
+          <button class="btn btn-outline btn-sm" id="export-impact-btn" aria-label="Export impact report">
             📥 Export Report
           </button>
-          <button class="btn btn-outline btn-sm" id="toggle-impact-btn">
+          <button class="btn btn-outline btn-sm" id="toggle-impact-btn" aria-label="Close dashboard">
             ✕ Close
           </button>
         </div>
@@ -156,26 +157,27 @@
       </div>
     </section>
 
-    <main class="main-layout">
+    <main class="main-layout" role="main">
       <!-- Left: Insights & Tableau -->
-      <section class="glass-panel" id="viz-panel">
+      <section class="glass-panel" id="viz-panel" aria-labelledby="viz-title">
         <div class="panel-header">
-          <span class="panel-title">Insight Dashboard</span>
+          <span class="panel-title" id="viz-title">Insight Dashboard</span>
           <div class="controls">
             <!-- Play selector for multi-play hero workflow -->
-            <select id="play-select" class="play-select">
+            <select id="play-select" class="play-select" aria-label="Select Hero Play">
               <option value="pipeline" selected>Pipeline Leakage</option>
               <option value="churn">Churn Rescue</option>
               <option value="spend">Spend Anomaly</option>
               <option value="revenue">Revenue Forecasting</option>
             </select>
-            <button class="btn btn-outline" id="run-pipeline-btn">Run Pipeline Audit</button>
+            <button class="btn btn-outline" id="run-pipeline-btn" aria-label="Run analysis for selected play">Run
+              Pipeline Audit</button>
           </div>
         </div>
-        <div class="viz-container" id="tableau-viz">
+        <div class="viz-container" id="tableau-viz" role="region" aria-label="Data Visualization">
           <div class="tableau-placeholder" id="viz-placeholder">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round">
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
               <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
             </svg>
@@ -187,19 +189,19 @@
       </section>
 
       <!-- Right: Action Center -->
-      <section class="glass-panel" id="action-panel">
+      <section class="glass-panel" id="action-panel" aria-labelledby="action-title">
         <div class="panel-header">
-          <span class="panel-title">Recommended Actions</span>
-          <span class="status-badge" id="action-count">0 PENDING</span>
+          <span class="panel-title" id="action-title">Recommended Actions</span>
+          <span class="status-badge" id="action-count" aria-live="polite">0 PENDING</span>
         </div>
-        <div class="actions-area" id="actions-list">
+        <div class="actions-area" id="actions-list" role="list" aria-label="Action items">
           <div class="empty-state" style="text-align: center; color: var(--text-muted); margin-top: 2rem;">
             <p>No analysis run yet.</p>
           </div>
         </div>
         <div class="actions-footer">
-          <button class="btn btn-outline" id="clear-actions">Clear</button>
-          <button class="btn btn-primary" id="approve-all-btn">Approve All</button>
+          <button class="btn btn-outline" id="clear-actions" aria-label="Clear all actions">Clear</button>
+          <button class="btn btn-primary" id="approve-all-btn" aria-label="Approve all actions">Approve All</button>
         </div>
       </section>
     </main>

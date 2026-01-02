@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import json
 import csv
+import time
 from pathlib import Path
 from uuid import uuid4
 from datetime import datetime, timezone, timedelta
@@ -18,10 +19,13 @@ from dotenv import load_dotenv
 _env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(_env_path, override=True)
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+from .utils.logger import get_logger
 
 from .agents.pipeline_leakage import PipelineLeakageAgent
 from .agents.churn_rescue import ChurnRescueAgent
@@ -43,6 +47,8 @@ try:
     CUSTOM_ENCODERS = {pd.Timestamp: lambda v: v.isoformat()}
 except Exception:
     CUSTOM_ENCODERS = {}
+
+logger = get_logger(__name__)
 
 app = FastAPI(title="Agentic Analytics Studio API", version="0.1.0")
 
@@ -66,6 +72,45 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    """
+    Log all API requests with timing information.
+    
+    Logs: method, path, duration, status code
+    """
+    start_time = time.time()
+    
+    # Process request
+    response = await call_next(request)
+    
+    # Calculate duration
+    duration = time.time() - start_time
+    
+    # Log request
+    # Use extra dict for structured logging if supported, otherwise just string interpolation
+    logger.info(f"{request.method} {request.url.path} - {response.status_code} - {duration:.3f}s")
+    
+    return response
+
+
+# Global exception handler
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Catch-all exception handler to return JSON errors instead of 500 crashes.
+    """
+    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "Internal Server Error",
+            "detail": str(exc) if os.getenv("LOG_LEVEL") == "DEBUG" else "An unexpected error occurred. Please check logs."
+        }
+    )
 
 # Backward compatibility: Keep AGENTS dict for existing code
 AGENTS = {
