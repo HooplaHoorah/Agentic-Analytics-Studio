@@ -101,7 +101,8 @@ def _append_approval_log(record: Dict[str, Any]) -> None:
 def health():
     return {
         "status": "ok", 
-        "llm_provider": os.getenv("LLM_PROVIDER", "none").lower()
+        "llm_provider": os.getenv("LLM_PROVIDER", "none").lower(),
+        "salesforce_mode": os.getenv("SALESFORCE_MODE", "stub").lower()
     }
 
 
