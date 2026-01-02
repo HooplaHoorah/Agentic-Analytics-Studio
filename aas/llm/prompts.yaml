@@ -1,0 +1,129 @@
+# Centralized LLM Prompts for Agentic Analytics Studio
+# All prompt templates for AI-generated rationales and recommendations
+
+# Rationale Generation Prompts
+rationale_template: |
+  You are an expert business analyst providing rationale for recommended actions.
+  
+  Context: {context}
+  
+  Action: {action}
+  
+  Provide a clear, concise rationale (2-3 sentences) explaining:
+  1. Why this action is necessary
+  2. What business impact it will have
+  3. Why it should be prioritized
+  
+  Keep the tone professional and data-driven.
+
+# Play-Specific Prompts
+
+pipeline_leakage_rationale: |
+  You are analyzing sales pipeline health for a B2B company.
+  
+  Deal Information:
+  - Deal: {deal_name}
+  - Stage: {stage}
+  - Amount: ${amount:,}
+  - Days in Stage: {days_in_stage}
+  - Last Activity: {last_activity_days} days ago
+  
+  Recommended Action: {action_title}
+  
+  Explain why this deal is at risk and why the recommended action will help recover it.
+  Focus on urgency and potential revenue impact.
+
+churn_rescue_rationale: |
+  You are analyzing customer health and churn risk for a SaaS company.
+  
+  Customer Information:
+  - Customer: {customer_name}
+  - MRR: ${mrr:,}
+  - Health Score: {health_score}/100
+  - NPS: {nps_score}
+  - Support Tickets (30d): {support_tickets}
+  
+  Recommended Action: {action_title}
+  
+  Explain why this customer is at risk of churning and how the recommended action
+  will improve retention. Focus on the value of keeping this customer.
+
+spend_anomaly_rationale: |
+  You are analyzing spending patterns and budget anomalies for a finance team.
+  
+  Transaction Information:
+  - Department: {department}
+  - Category: {category}
+  - Amount: ${amount:,}
+  - Variance from Average: {variance_pct}%
+  - Vendor: {vendor}
+  
+  Recommended Action: {action_title}
+  
+  Explain why this spending pattern is anomalous and what risks it poses.
+  Focus on cost control and budget compliance.
+
+revenue_forecasting_rationale: |
+  You are analyzing revenue forecasts and pipeline health for a sales organization.
+  
+  Forecast Information:
+  - Current Pipeline: ${current_pipeline:,}
+  - Target: ${target:,}
+  - Shortfall: ${shortfall:,}
+  - Segment: {segment}
+  
+  Recommended Action: {action_title}
+  
+  Explain why this action will help close the revenue gap and accelerate pipeline.
+  Focus on proactive intervention and revenue recovery.
+
+# Fallback Prompts (for rule-based mode)
+
+fallback_rationale_high_priority: |
+  This is a high-priority action based on:
+  - Significant financial impact (${impact_score:,})
+  - Urgent timeline requiring immediate attention
+  - Data-driven analysis showing clear risk indicators
+  
+  Immediate action is recommended to prevent revenue loss or cost overruns.
+
+fallback_rationale_medium_priority: |
+  This is a medium-priority action based on:
+  - Moderate financial impact (${impact_score:,})
+  - Important but not immediately critical
+  - Analysis showing emerging risk patterns
+  
+  Action should be taken within the next 1-2 weeks to optimize outcomes.
+
+fallback_rationale_low_priority: |
+  This is a lower-priority action based on:
+  - Smaller financial impact (${impact_score:,})
+  - Preventive measure for long-term health
+  - Analysis showing minor risk indicators
+  
+  Action can be scheduled as resources permit, but should not be ignored.
+
+# Summary Generation Prompts
+
+analysis_summary_template: |
+  Summarize the following analysis in 1-2 sentences:
+  
+  Metrics: {metrics}
+  Findings: {findings}
+  
+  Provide a clear, executive-level summary highlighting the most important insights.
+
+# Recommendation Prompts
+
+action_recommendation_template: |
+  Based on the following analysis, recommend specific actions:
+  
+  Analysis: {analysis}
+  Priority: {priority}
+  
+  For each action, provide:
+  1. A clear, actionable title
+  2. Specific steps to take
+  3. Expected impact
+  
+  Keep recommendations concrete and measurable.
