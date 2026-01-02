@@ -8,6 +8,7 @@
         "preview": "vite preview"
     },
     "dependencies": {
+        "shepherd.js": "^14.5.1",
         "vite": "^6.0.0"
     }
 }

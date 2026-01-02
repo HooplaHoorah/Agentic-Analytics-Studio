@@ -26,8 +26,14 @@ from pydantic import BaseModel, Field
 from .agents.pipeline_leakage import PipelineLeakageAgent
 from .agents.churn_rescue import ChurnRescueAgent
 from .agents.spend_anomaly import SpendAnomalyAgent
+from .agents.revenue_forecasting import RevenueForecastingAgent
 from .executor import execute_actions
 from .services.tableau_client import TableauClient
+
+# Import and initialize play registry
+from .plays import list_plays as registry_list_plays, get_agent as registry_get_agent
+from .plays import plays as _  # Auto-registers all plays on import
+
 import os
 
 # Optional: handle pandas.Timestamp cleanly if it ever leaks into responses
@@ -61,10 +67,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Backward compatibility: Keep AGENTS dict for existing code
 AGENTS = {
     "pipeline": PipelineLeakageAgent,
     "churn": ChurnRescueAgent,
     "spend": SpendAnomalyAgent,
+    "revenue": RevenueForecastingAgent,
 }
 
 
@@ -99,7 +107,14 @@ def health():
 
 @app.get("/plays")
 def plays():
-    return {"plays": list(AGENTS.keys())}
+    """List all registered plays with metadata."""
+    try:
+        # Use registry for rich metadata
+        plays_list = registry_list_plays()
+        return {"plays": plays_list}
+    except Exception:
+        # Fallback to simple list if registry fails
+        return {"plays": list(AGENTS.keys())}
 
 
 @app.post("/run/{play}")
@@ -587,4 +602,69 @@ def tableau_jwt(play: str = "pipeline"):
         return {"token": token, "vizUrl": viz_url}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+# --- Impact Analytics Endpoints ---
+
+from .analytics import calculate_aggregate_impact, export_impact_report_csv
+from fastapi.responses import Response
+
+
+@app.get("/api/impact/summary")
+def get_impact_summary():
+    """
+    Get aggregate impact metrics across all plays and actions.
+    
+    Returns summary statistics including:
+    - Total runs, actions, approvals, executions
+    - Total impact score and estimated dollar value
+    - Top plays by impact
+    - Recent activity
+    """
+    try:
+        summary = calculate_aggregate_impact()
+        return summary
+    except Exception as e:
+        return {
+            "error": str(e),
+            "message": "Failed to calculate impact summary"
+        }
+
+
+@app.get("/api/impact/export")
+def export_impact_report(format: str = "csv"):
+    """
+    Export impact report in specified format.
+    
+    Args:
+        format: Export format ("csv" or "json")
+    
+    Returns:
+        CSV or JSON file download
+    """
+    try:
+        if format.lower() == "csv":
+            csv_content = export_impact_report_csv()
+            return Response(
+                content=csv_content,
+                media_type="text/csv",
+                headers={
+                    "Content-Disposition": f"attachment; filename=aas_impact_report_{datetime.now().strftime('%Y%m%d')}.csv"
+                }
+            )
+        elif format.lower() == "json":
+            summary = calculate_aggregate_impact()
+            return Response(
+                content=json.dumps(summary, indent=2, default=str),
+                media_type="application/json",
+                headers={
+                    "Content-Disposition": f"attachment; filename=aas_impact_report_{datetime.now().strftime('%Y%m%d')}.json"
+                }
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported format: {format}. Use 'csv' or 'json'.")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Export failed: {str(e)}")
 

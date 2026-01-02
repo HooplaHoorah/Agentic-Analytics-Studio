@@ -1,0 +1,41 @@
+opportunity_id,opportunity_name,amount,close_date,stage,probability,region,segment,owner,created_date
+OPP-2001,Enterprise Cloud Migration,450000,2026-02-15,Negotiation,75,North America,Enterprise,Sarah Chen,2025-11-20
+OPP-2002,Mid-Market CRM Upgrade,125000,2026-01-30,Proposal,50,EMEA,Mid-Market,James Wilson,2025-12-01
+OPP-2003,SMB Analytics Package,35000,2026-03-10,Qualification,25,North America,SMB,Maria Garcia,2025-12-15
+OPP-2004,Enterprise Security Suite,680000,2026-02-28,Negotiation,75,APAC,Enterprise,David Kim,2025-10-15
+OPP-2005,Mid-Market Integration,95000,2026-01-20,Proposal,50,North America,Mid-Market,Sarah Chen,2025-11-30
+OPP-2006,Enterprise Data Platform,520000,2025-12-15,Closed Won,100,North America,Enterprise,James Wilson,2025-08-20
+OPP-2007,SMB Starter Pack,28000,2025-12-20,Closed Won,100,EMEA,SMB,Maria Garcia,2025-10-05
+OPP-2008,Mid-Market Expansion,145000,2025-11-30,Closed Lost,0,LATAM,Mid-Market,Carlos Rodriguez,2025-09-10
+OPP-2009,Enterprise AI Suite,750000,2026-03-20,Qualification,25,North America,Enterprise,Sarah Chen,2025-12-20
+OPP-2010,SMB Cloud Starter,42000,2026-02-05,Proposal,50,APAC,SMB,David Kim,2025-12-10
+OPP-2011,Mid-Market Analytics,110000,2026-01-25,Negotiation,75,North America,Mid-Market,James Wilson,2025-11-15
+OPP-2012,Enterprise Compliance,390000,2025-12-28,Closed Won,100,EMEA,Enterprise,Maria Garcia,2025-09-15
+OPP-2013,SMB Marketing Suite,31000,2026-02-10,Qualification,25,North America,SMB,Sarah Chen,2025-12-18
+OPP-2014,Mid-Market Security,88000,2026-03-15,Prospecting,10,LATAM,Mid-Market,Carlos Rodriguez,2026-01-05
+OPP-2015,Enterprise Platform,615000,2026-02-20,Proposal,50,North America,Enterprise,James Wilson,2025-11-01
+OPP-2016,SMB Automation,39000,2025-12-22,Closed Won,100,EMEA,SMB,Maria Garcia,2025-10-20
+OPP-2017,Mid-Market Cloud,132000,2026-01-18,Negotiation,75,APAC,Mid-Market,David Kim,2025-11-25
+OPP-2018,Enterprise Integration,485000,2025-11-25,Closed Lost,0,North America,Enterprise,Sarah Chen,2025-08-30
+OPP-2019,SMB CRM Basic,26000,2026-03-05,Qualification,25,North America,SMB,James Wilson,2025-12-22
+OPP-2020,Mid-Market Data,118000,2026-02-12,Proposal,50,EMEA,Mid-Market,Maria Garcia,2025-12-05
+OPP-2021,Enterprise Digital Transform,820000,2026-03-25,Prospecting,10,APAC,Enterprise,David Kim,2025-12-28
+OPP-2022,SMB Sales Suite,44000,2026-01-28,Negotiation,75,North America,SMB,Sarah Chen,2025-12-08
+OPP-2023,Mid-Market Platform,155000,2025-12-18,Closed Won,100,LATAM,Mid-Market,Carlos Rodriguez,2025-09-25
+OPP-2024,Enterprise Analytics,560000,2026-02-08,Proposal,50,North America,Enterprise,James Wilson,2025-10-30
+OPP-2025,SMB Collaboration,33000,2026-03-12,Qualification,25,EMEA,SMB,Maria Garcia,2025-12-20
+OPP-2026,Mid-Market AI,142000,2026-01-22,Negotiation,75,North America,Mid-Market,Sarah Chen,2025-11-18
+OPP-2027,Enterprise Cloud,695000,2025-12-10,Closed Won,100,APAC,Enterprise,David Kim,2025-08-15
+OPP-2028,SMB Security,37000,2026-02-18,Proposal,50,North America,SMB,James Wilson,2025-12-12
+OPP-2029,Mid-Market Compliance,98000,2025-12-05,Closed Lost,0,EMEA,Mid-Market,Maria Garcia,2025-09-20
+OPP-2030,Enterprise Automation,725000,2026-03-18,Qualification,25,North America,Enterprise,Sarah Chen,2025-12-25
+OPP-2031,SMB Integration,29000,2026-02-22,Prospecting,10,LATAM,SMB,Carlos Rodriguez,2026-01-08
+OPP-2032,Mid-Market Digital,128000,2026-01-15,Negotiation,75,APAC,Mid-Market,David Kim,2025-11-22
+OPP-2033,Enterprise Marketing,540000,2025-12-30,Closed Won,100,North America,Enterprise,James Wilson,2025-09-10
+OPP-2034,SMB Data Platform,41000,2026-03-08,Proposal,50,EMEA,SMB,Maria Garcia,2025-12-16
+OPP-2035,Mid-Market Automation,115000,2026-02-25,Qualification,25,North America,Mid-Market,Sarah Chen,2025-12-02
+OPP-2036,Enterprise Sales Suite,670000,2026-02-15,Negotiation,75,LATAM,Enterprise,Carlos Rodriguez,2025-10-20
+OPP-2037,SMB Cloud Platform,35000,2026-01-30,Proposal,50,North America,SMB,James Wilson,2025-12-14
+OPP-2038,Mid-Market Security Plus,135000,2025-11-28,Closed Lost,0,APAC,Mid-Market,David Kim,2025-09-05
+OPP-2039,Enterprise Collaboration,590000,2026-03-22,Prospecting,10,North America,Enterprise,Sarah Chen,2025-12-30
+OPP-2040,SMB Analytics Pro,38000,2026-02-14,Qualification,25,EMEA,SMB,Maria Garcia,2025-12-19

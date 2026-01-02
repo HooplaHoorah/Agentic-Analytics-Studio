@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Decision Studio | Agentic Analytics Studio</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="tour.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -102,12 +103,58 @@
         <h1>Agentic Analytics Studio</h1>
       </div>
       <div class="system-status">
+        <button class="btn btn-outline btn-sm" id="try-demo-btn" title="Launch a quick demo scenario">
+          🎯 Try Demo
+        </button>
+        <button class="btn btn-outline btn-sm" id="take-tour-btn" title="Take the product tour">
+          ℹ️ Tour
+        </button>
+        <button class="btn btn-outline btn-sm" id="view-impact-btn" title="View impact dashboard">
+          📊 Impact
+        </button>
         <span class="status-badge status-online" id="api-status">API: ONLINE</span>
         <span class="status-badge" id="llm-status"
           style="display:none; background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4);">LLM:
           --</span>
       </div>
     </header>
+
+    <!-- Impact Dashboard -->
+    <section class="impact-dashboard" id="impact-dashboard" style="display: none;">
+      <div class="impact-header">
+        <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0;">📊 Impact Dashboard</h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-outline btn-sm" id="export-impact-btn">
+            📥 Export Report
+          </button>
+          <button class="btn btn-outline btn-sm" id="toggle-impact-btn">
+            ✕ Close
+          </button>
+        </div>
+      </div>
+      <div class="impact-metrics" id="impact-metrics">
+        <div class="impact-card">
+          <div class="impact-label">Total Value</div>
+          <div class="impact-value" id="impact-total-value">$0</div>
+          <div class="impact-sublabel">Estimated Impact</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-label">Actions Approved</div>
+          <div class="impact-value" id="impact-approved">0</div>
+          <div class="impact-sublabel">of <span id="impact-total-actions">0</span> generated</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-label">Pipeline Runs</div>
+          <div class="impact-value" id="impact-runs">0</div>
+          <div class="impact-sublabel">Analyses completed</div>
+        </div>
+        <div class="impact-card">
+          <div class="impact-label">Top Play</div>
+          <div class="impact-value" id="impact-top-play">-</div>
+          <div class="impact-sublabel"><span id="impact-top-play-score">0</span> impact score</div>
+        </div>
+      </div>
+    </section>
 
     <main class="main-layout">
       <!-- Left: Insights & Tableau -->
@@ -120,6 +167,7 @@
               <option value="pipeline" selected>Pipeline Leakage</option>
               <option value="churn">Churn Rescue</option>
               <option value="spend">Spend Anomaly</option>
+              <option value="revenue">Revenue Forecasting</option>
             </select>
             <button class="btn btn-outline" id="run-pipeline-btn">Run Pipeline Audit</button>
           </div>

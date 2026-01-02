@@ -29,14 +29,27 @@ AAS enables business users to ask questions like **“Why are my deals slipping?
 ### Environment Variables (.env)
 Copy `.env.example` to `.env` and configure:
 
-| Variable | Description |
-|---|---|
-| `LLM_PROVIDER` | `openai`, `ollama`, or `none`. |
-| `OPENAI_API_KEY` | Required if using OpenAI. |
-| `SF_USERNAME` | Salesforce Username (leave empty for Stub Mode). |
-| `SF_PASSWORD` | Salesforce Password. |
-| `SF_SECURITY_TOKEN` | Salesforce Security Token. |
-| `TABLEAU_CONNECTED_APP_...` | Required for embedding live dashboards. |  
+| Variable | Description | Default / Mode |
+|---|---|---|
+| `LLM_PROVIDER` | `openai`, `ollama`, or `none`. | `none` (Rule-based) |
+| `OPENAI_API_KEY` | Your OpenAI API key. | Required for `openai` |
+| `OLLAMA_BASE_URL` | Base URL for Ollama API. | `http://localhost:11434/api` |
+| `OLLAMA_MODEL` | Model name for Ollama. | `llama3` |
+| `SF_USERNAME` | Salesforce Username. | Empty = **Mock Mode** |
+| `SF_PASSWORD` | Salesforce Password. | Required for live SF |
+| `SF_SECURITY_TOKEN`| Salesforce Security Token. | Required for live SF |
+| `TABLEAU_...` | Connected App & Viz settings. | Required for live Viz |
+
+## 2. Feature Toggles
+
+### AI Rationales
+- **To Enable (Cloud):** Set `LLM_PROVIDER=openai` and provide `OPENAI_API_KEY`.
+- **To Enable (Local):** Set `LLM_PROVIDER=ollama` and ensure Ollama is running.
+- **Deterministic:** Set `LLM_PROVIDER=none`. The system will use keyword-based rules to generate rationales without an LLM.
+
+### Salesforce Integration
+- **Live Mode:** Provide `SF_USERNAME`, `SF_PASSWORD`, and `SF_SECURITY_TOKEN`. The system will attempt to create real Tasks in your Salesforce org.
+- **Mock/Stub Mode:** Leave `SF_USERNAME` blank. The system will log a "Mock Success" message and skip API calls, allowing for safe demo testing.
 
 Unlike a dashboard, the Studio keeps context (datasets, decisions, actions) and provides guardrails (approvals, audit trails).  
 

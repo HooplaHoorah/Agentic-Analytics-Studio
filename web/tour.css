@@ -1,0 +1,147 @@
+/* Shepherd.js Tour Customization for AAS */
+
+/* Override Shepherd default theme to match AAS design */
+.shepherd-modal-overlay-container {
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.aas-tour-step {
+    background: linear-gradient(135deg, rgba(28, 32, 42, 0.98) 0%, rgba(35, 40, 52, 0.98) 100%);
+    border: 1px solid rgba(76, 141, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    max-width: 400px;
+    padding: 0;
+    backdrop-filter: blur(10px);
+}
+
+.aas-tour-step .shepherd-content {
+    padding: 0;
+}
+
+.aas-tour-step .shepherd-header {
+    background: linear-gradient(135deg, rgba(76, 141, 255, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    border-bottom: 1px solid rgba(76, 141, 255, 0.2);
+    padding: 1.25rem 1.5rem;
+    border-radius: 16px 16px 0 0;
+}
+
+.aas-tour-step .shepherd-title {
+    color: #ffffff;
+    font-family: 'Outfit', 'Inter', system-ui, sans-serif;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.aas-tour-step .shepherd-cancel-icon {
+    color: rgba(255, 255, 255, 0.6);
+    transition: color 0.2s ease;
+}
+
+.aas-tour-step .shepherd-cancel-icon:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.aas-tour-step .shepherd-text {
+    color: rgba(255, 255, 255, 0.85);
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    padding: 1.5rem;
+}
+
+.aas-tour-step .shepherd-text p {
+    margin: 0 0 0.75rem 0;
+}
+
+.aas-tour-step .shepherd-text p:last-child {
+    margin-bottom: 0;
+}
+
+.aas-tour-step .shepherd-text ul {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.aas-tour-step .shepherd-text strong {
+    color: #4c8dff;
+    font-weight: 600;
+}
+
+.aas-tour-step .shepherd-footer {
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 16px 16px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+.aas-tour-step .shepherd-button {
+    background: linear-gradient(135deg, #4c8dff 0%, #5a9eff 100%);
+    border: none;
+    border-radius: 10px;
+    color: #ffffff;
+    cursor: pointer;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(76, 141, 255, 0.3);
+}
+
+.aas-tour-step .shepherd-button:hover {
+    background: linear-gradient(135deg, #5a9eff 0%, #6aabff 100%);
+    box-shadow: 0 6px 16px rgba(76, 141, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.aas-tour-step .shepherd-button:active {
+    transform: translateY(0);
+}
+
+.aas-tour-step .shepherd-button-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: none;
+}
+
+.aas-tour-step .shepherd-button-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: none;
+}
+
+/* Arrow styling */
+.aas-tour-step .shepherd-arrow:before {
+    background: linear-gradient(135deg, rgba(28, 32, 42, 0.98) 0%, rgba(35, 40, 52, 0.98) 100%);
+    border: 1px solid rgba(76, 141, 255, 0.3);
+}
+
+/* Highlight element during tour */
+.shepherd-target-click-disabled.shepherd-enabled.shepherd-target {
+    pointer-events: none;
+}
+
+/* Modal opening animation */
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+/* Tour progress indicator (optional enhancement) */
+.aas-tour-step .shepherd-header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #4c8dff 0%, #8b5cf6 100%);
+    opacity: 0.5;
+}

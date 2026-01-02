@@ -487,8 +487,130 @@ if (clearActionsBtn) {
 }
 
 
+// --- Impact Dashboard ---
+
+async function fetchImpactData() {
+    try {
+        const response = await fetch(`${API_BASE}/api/impact/summary`);
+        const data = await response.json();
+        return data;
+    } catch (e) {
+        console.error("Failed to fetch impact data", e);
+        return null;
+    }
+}
+
+function updateImpactDashboard(data) {
+    if (!data) return;
+
+    // Update metrics
+    document.getElementById('impact-total-value').textContent =
+        `$${(data.estimated_value || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+
+    document.getElementById('impact-approved').textContent = data.total_approved || 0;
+    document.getElementById('impact-total-actions').textContent = data.total_actions || 0;
+    document.getElementById('impact-runs').textContent = data.total_runs || 0;
+
+    // Top play
+    if (data.top_plays && data.top_plays.length > 0) {
+        const topPlay = data.top_plays[0];
+        const playLabels = {
+            'pipeline': 'Pipeline Leakage',
+            'churn': 'Churn Rescue',
+            'spend': 'Spend Anomaly',
+            'revenue': 'Revenue Forecasting'
+        };
+        document.getElementById('impact-top-play').textContent =
+            playLabels[topPlay.play] || topPlay.play;
+        document.getElementById('impact-top-play-score').textContent =
+            topPlay.total_impact.toFixed(0);
+    }
+}
+
+async function toggleImpactDashboard() {
+    const dashboard = document.getElementById('impact-dashboard');
+    const isVisible = dashboard.style.display !== 'none';
+
+    if (isVisible) {
+        dashboard.style.display = 'none';
+    } else {
+        dashboard.style.display = 'block';
+        // Fetch and update data when showing
+        const data = await fetchImpactData();
+        updateImpactDashboard(data);
+    }
+}
+
+async function exportImpactReport(format = 'csv') {
+    try {
+        const response = await fetch(`${API_BASE}/api/impact/export?format=${format}`);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `aas_impact_report_${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    } catch (e) {
+        console.error("Export failed", e);
+        alert("Failed to export impact report");
+    }
+}
+
+// Wire up impact dashboard buttons
+const viewImpactBtn = document.getElementById('view-impact-btn');
+if (viewImpactBtn) {
+    viewImpactBtn.addEventListener('click', toggleImpactDashboard);
+}
+
+const toggleImpactBtn = document.getElementById('toggle-impact-btn');
+if (toggleImpactBtn) {
+    toggleImpactBtn.addEventListener('click', toggleImpactDashboard);
+}
+
+const exportImpactBtn = document.getElementById('export-impact-btn');
+if (exportImpactBtn) {
+    exportImpactBtn.addEventListener('click', () => exportImpactReport('csv'));
+}
+
+
+// --- Tour Integration ---
+import { startTourIfNeeded, startTour, resetTour } from './tour.js';
+
+// Try Demo button: auto-select pipeline + launch tour
+const tryDemoBtn = document.getElementById('try-demo-btn');
+if (tryDemoBtn) {
+    tryDemoBtn.addEventListener('click', () => {
+        // Reset tour so it shows again
+        resetTour();
+
+        // Select Pipeline Leakage (default demo)
+        if (playSelect) {
+            playSelect.value = 'pipeline';
+            currentPlay = 'pipeline';
+            runBtn.textContent = 'Run Pipeline Leakage';
+        }
+
+        // Start the tour
+        startTour();
+    });
+}
+
+// Take Tour button: manually start tour
+const takeTourBtn = document.getElementById('take-tour-btn');
+if (takeTourBtn) {
+    takeTourBtn.addEventListener('click', () => {
+        startTour();
+    });
+}
+
 // Start
 checkStatus();
 loadTableauView();
 setInterval(checkStatus, 15000);
 fetchContextActions();
+
+// Auto-start tour on first visit
+startTourIfNeeded();

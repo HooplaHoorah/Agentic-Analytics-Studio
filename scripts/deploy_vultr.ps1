@@ -4,15 +4,30 @@ $TargetHost = "root@66.135.1.215"
 
 Write-Host "Deploying to Vultr..."
 
-# 1. Upload Code
-Write-Host "Uploading aas/db.py..."
-Get-Content -Raw "aas/db.py" | ssh $TargetHost "cat > /opt/aas/aas/db.py"
+# 1. Upload Code (Comprehensive)
+Write-Host "Syncing directory structure..."
+ssh $TargetHost "mkdir -p /opt/aas/aas/agents /opt/aas/aas/models /opt/aas/aas/services"
 
-Write-Host "Uploading aas/api.py..."
-Get-Content -Raw "aas/api.py" | ssh $TargetHost "cat > /opt/aas/aas/api.py"
+$FilesToDeploy = @(
+    "aas/db.py",
+    "aas/api.py",
+    "aas/executor.py",
+    "aas/models/action.py",
+    "aas/models/play.py",
+    "aas/agents/base.py",
+    "aas/agents/pipeline_leakage.py",
+    "aas/agents/churn_rescue.py",
+    "aas/agents/spend_anomaly.py",
+    "aas/services/salesforce_client.py",
+    "aas/services/tableau_client.py",
+    "aas/services/slack_client.py",
+    "requirements.txt"
+)
 
-Write-Host "Uploading requirements.txt..."
-Get-Content -Raw "requirements.txt" | ssh $TargetHost "cat > /opt/aas/requirements.txt"
+foreach ($file in $FilesToDeploy) {
+    Write-Host "Mirroring $file..."
+    Get-Content -Raw $file | ssh $TargetHost "cat > /opt/aas/$file"
+}
 
 # 2. Configure Environment (Secrets)
 Write-Host "Configuring secrets in /etc/aas/aas.env..."
@@ -31,6 +46,18 @@ TABLEAU_VIZ_URL_CLOUD="https://10ax.online.tableau.com/t/agenticanalyticsstudio/
 TABLEAU_VIZ_URL_PIPELINE="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
 TABLEAU_VIZ_URL_CHURN="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
 TABLEAU_VIZ_URL_SPEND="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
+
+# AI / LLM Configuration
+LLM_PROVIDER="openai"
+OPENAI_API_KEY="sk-proj-c028cVjaolgXS9CjYdsZYVlK2Vul6RNOrwXHwmgoH6wTpI-lmg-Wofn6ILCNNRP4vckiBVxW8JT3BlbkFJrQAlW8lBgNlmD6w3gPrcacZ6tgEyo7pW72HWIfwCuxvgA"
+OLLAMA_BASE_URL="http://localhost:11434/api"
+OLLAMA_MODEL="llama3"
+
+# Salesforce Configuration (Empty SF_USERNAME triggers Mock Mode)
+SF_USERNAME=""
+SF_PASSWORD=""
+SF_SECURITY_TOKEN=""
+SF_DOMAIN="login"
 "@
 
 # Write env file safely (using specific echo to avoid pipe issues with special chars if any, but simplistic here)
