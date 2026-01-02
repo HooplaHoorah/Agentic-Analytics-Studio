@@ -1,0 +1,51 @@
+customer_id,name,mrr,contract_end_date,support_tickets_30d,nps_score,usage_trend,last_login_days,payment_delays,account_health_score
+C001,Acme Corporation,15000,2026-03-15,8,6,declining,5,2,45
+C002,TechStart Inc,4500,2026-02-20,2,8,stable,1,0,75
+C003,LocalBiz LLC,1200,2026-01-30,12,3,declining,15,3,25
+C004,GlobalCo Industries,28000,2026-04-10,1,9,growing,0,0,95
+C005,InnovateTech Solutions,8500,2026-03-05,4,7,stable,2,1,70
+C006,MegaCorp Ltd,22000,2026-03-25,6,5,declining,8,2,50
+C007,QuickServe Co,1800,2026-02-15,15,2,declining,22,4,15
+C008,DataDriven Analytics,6200,2026-02-28,3,8,growing,1,0,80
+C009,FortuneCo,32000,2026-05-01,0,9,stable,0,0,90
+C010,StartupHub,1500,2026-01-25,9,4,declining,12,3,30
+C011,CloudFirst Systems,5800,2026-03-10,7,6,declining,6,2,48
+C012,IndustryLeader Corp,35000,2026-04-20,1,9,growing,0,0,92
+C013,LocalRetail Group,950,2026-01-20,18,1,declining,28,5,10
+C014,SaasPro Inc,7100,2026-03-01,2,8,stable,1,0,78
+C015,GlobalTech Industries,30000,2026-05-15,5,7,declining,4,1,55
+C016,SmallBiz Solutions,1350,2026-02-10,10,4,declining,14,3,28
+C017,ScaleUp Ventures,6800,2026-02-25,1,9,growing,0,0,88
+C018,MajorPlayer Ltd,26000,2026-04-05,4,6,stable,3,1,65
+C019,QuickGrow Co,1650,2026-02-18,11,3,declining,18,4,22
+C020,TechAdvance Systems,7500,2026-03-08,2,8,growing,1,0,82
+C021,LeadingEdge Corp,33000,2026-05-10,3,8,declining,5,1,58
+C022,FastTrack Services,1100,2026-01-28,14,2,declining,25,5,12
+C023,CloudScale Solutions,6400,2026-03-12,6,7,declining,7,2,52
+C024,TopTier Industries,38000,2026-05-20,0,9,growing,0,0,94
+C025,LocalPro LLC,880,2026-01-22,20,1,declining,30,6,8
+C026,DataFlow Analytics,7300,2026-03-03,3,8,stable,2,0,76
+C027,PremierCo,29000,2026-04-25,4,7,declining,6,1,54
+C028,QuickWin Solutions,1420,2026-02-12,9,4,declining,16,3,26
+C029,InnovatePro Inc,7900,2026-02-27,1,9,growing,0,0,86
+C030,EliteCorp Ltd,27000,2026-04-08,5,6,stable,4,1,62
+C031,GrowthPath Co,1280,2026-02-16,13,3,declining,20,4,20
+C032,TechPioneer Systems,7700,2026-03-06,2,8,growing,1,0,84
+C033,MarketLeader Corp,34000,2026-05-12,2,8,declining,7,1,56
+C034,RapidScale Services,1180,2026-01-26,16,2,declining,24,5,14
+C035,CloudMaster Solutions,6600,2026-03-14,5,7,declining,8,2,50
+C036,IndustryGiant Inc,39000,2026-05-25,0,9,growing,0,0,96
+C037,LocalLeader LLC,820,2026-01-24,22,1,declining,32,6,6
+C038,DataPro Analytics,7400,2026-03-04,3,8,stable,2,0,77
+C039,PremiumCo,31000,2026-05-05,3,7,declining,5,1,60
+C040,FastGrowth Solutions,1550,2026-02-14,8,4,declining,13,3,32
+C041,ScaleTech Ventures,8100,2026-02-26,1,9,growing,0,0,90
+C042,TopChoice Ltd,28000,2026-04-12,4,6,stable,3,1,68
+C043,QuickScale Co,1380,2026-02-19,12,3,declining,19,4,24
+C044,CloudEdge Systems,7800,2026-03-09,2,8,growing,1,0,85
+C045,LeaderCorp Industries,32000,2026-05-18,4,7,declining,6,1,57
+C046,GrowFast Services,1220,2026-01-29,15,2,declining,26,5,11
+C047,TechStream Solutions,6700,2026-03-16,6,7,declining,9,2,49
+C048,ElitePlayer Inc,40000,2026-06-01,0,9,growing,0,0,98
+C049,LocalChamp LLC,920,2026-01-23,19,1,declining,29,6,9
+C050,DataWave Analytics,7600,2026-03-07,2,8,stable,1,0,79

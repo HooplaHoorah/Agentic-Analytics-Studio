@@ -1,0 +1,51 @@
+transaction_id,date,department,category,vendor,amount,budget_category,approver,description,is_recurring
+T001,2026-01-02,Engineering,Cloud Services,AWS,12500,Infrastructure,John Smith,EC2 instances - monthly,true
+T002,2026-01-03,Marketing,Advertising,Google Ads,8500,Marketing,Jane Doe,Q1 campaign spend,false
+T003,2026-01-04,Sales,Software,Salesforce,15000,Sales Tools,Bob Johnson,Annual licenses,true
+T004,2026-01-05,Engineering,Cloud Services,AWS,45000,Infrastructure,John Smith,Unexpected spike - investigation needed,false
+T005,2026-01-06,HR,Recruiting,LinkedIn,3200,Talent Acquisition,Alice Brown,Job postings,true
+T006,2026-01-07,Marketing,Events,EventBrite,22000,Marketing,Jane Doe,Conference sponsorship,false
+T007,2026-01-08,Engineering,Software,GitHub,2500,Development Tools,John Smith,Enterprise plan,true
+T008,2026-01-09,Finance,Software,QuickBooks,450,Finance Tools,Carol White,Monthly subscription,true
+T009,2026-01-10,Sales,Travel,United Airlines,18000,Travel,Bob Johnson,Sales team offsite,false
+T010,2026-01-11,Engineering,Cloud Services,Azure,8200,Infrastructure,John Smith,Database hosting,true
+T011,2026-01-12,Marketing,Advertising,Facebook,6500,Marketing,Jane Doe,Social media ads,false
+T012,2026-01-13,IT,Hardware,Dell,35000,IT Equipment,David Lee,Laptop refresh,false
+T013,2026-01-14,Engineering,Software,DataDog,4800,Monitoring,John Smith,APM tools,true
+T014,2026-01-15,Sales,Software,HubSpot,5200,Sales Tools,Bob Johnson,Marketing automation,true
+T015,2026-01-16,Marketing,Consulting,Acme Consulting,28000,Marketing,Jane Doe,Brand strategy,false
+T016,2026-01-17,Engineering,Cloud Services,AWS,13200,Infrastructure,John Smith,S3 storage,true
+T017,2026-01-18,HR,Software,BambooHR,1800,HR Tools,Alice Brown,HRIS platform,true
+T018,2026-01-19,Finance,Consulting,PwC,42000,Finance,Carol White,Audit services,false
+T019,2026-01-20,Sales,Events,Marriott,15000,Travel,Bob Johnson,Customer summit,false
+T020,2026-01-21,Engineering,Software,Atlassian,3500,Development Tools,John Smith,Jira + Confluence,true
+T021,2026-01-22,Marketing,Advertising,Google Ads,9200,Marketing,Jane Doe,Search ads,false
+T022,2026-01-23,IT,Software,Microsoft,12000,IT Equipment,David Lee,Office 365 licenses,true
+T023,2026-01-24,Engineering,Cloud Services,AWS,52000,Infrastructure,John Smith,Critical: Unplanned data transfer costs,false
+T024,2026-01-25,Sales,Software,ZoomInfo,6800,Sales Tools,Bob Johnson,Contact database,true
+T025,2026-01-26,Marketing,Advertising,LinkedIn,7500,Marketing,Jane Doe,Sponsored content,false
+T026,2026-01-27,Engineering,Software,Sentry,2200,Monitoring,John Smith,Error tracking,true
+T027,2026-01-28,HR,Events,Hilton,8500,HR,Alice Brown,Team building retreat,false
+T028,2026-01-29,Finance,Software,Stripe,850,Finance Tools,Carol White,Payment processing,true
+T029,2026-01-30,Sales,Travel,Delta,16000,Travel,Bob Johnson,Customer visits,false
+T030,2026-01-31,Engineering,Cloud Services,GCP,9500,Infrastructure,John Smith,BigQuery analytics,true
+T031,2026-02-01,Marketing,Consulting,Brand Agency,32000,Marketing,Jane Doe,Website redesign,false
+T032,2026-02-02,IT,Hardware,Apple,28000,IT Equipment,David Lee,MacBook Pros,false
+T033,2026-02-03,Engineering,Software,CircleCI,3200,Development Tools,John Smith,CI/CD platform,true
+T034,2026-02-04,Sales,Software,Outreach,4500,Sales Tools,Bob Johnson,Sales engagement,true
+T035,2026-02-05,Marketing,Advertising,Twitter,5800,Marketing,Jane Doe,Promoted tweets,false
+T036,2026-02-06,Engineering,Cloud Services,AWS,14500,Infrastructure,John Smith,RDS databases,true
+T037,2026-02-07,HR,Software,Greenhouse,2400,Talent Acquisition,Alice Brown,ATS platform,true
+T038,2026-02-08,Finance,Consulting,Deloitte,38000,Finance,Carol White,Tax advisory,false
+T039,2026-02-09,Sales,Events,Hyatt,12000,Travel,Bob Johnson,Sales kickoff,false
+T040,2026-02-10,Engineering,Software,PagerDuty,2800,Monitoring,John Smith,Incident management,true
+T041,2026-02-11,Marketing,Advertising,Google Ads,8800,Marketing,Jane Doe,Display ads,false
+T042,2026-02-12,IT,Software,Okta,5500,IT Equipment,David Lee,SSO platform,true
+T043,2026-02-13,Engineering,Cloud Services,AWS,48000,Infrastructure,John Smith,Alert: Unusual Lambda usage,false
+T044,2026-02-14,Sales,Software,Gong,7200,Sales Tools,Bob Johnson,Revenue intelligence,true
+T045,2026-02-15,Marketing,Events,Convention Center,25000,Marketing,Jane Doe,Trade show booth,false
+T046,2026-02-16,Engineering,Software,New Relic,4200,Monitoring,John Smith,Performance monitoring,true
+T047,2026-02-17,HR,Consulting,HR Consulting,18000,HR,Alice Brown,Compensation study,false
+T048,2026-02-18,Finance,Software,Bill.com,680,Finance Tools,Carol White,AP automation,true
+T049,2026-02-19,Sales,Travel,American Airlines,14000,Travel,Bob Johnson,Conference travel,false
+T050,2026-02-20,Engineering,Cloud Services,Cloudflare,3800,Infrastructure,John Smith,CDN + security,true

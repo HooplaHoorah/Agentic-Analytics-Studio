@@ -1,0 +1,51 @@
+opportunity_id,name,stage,amount,close_date,days_in_stage,probability,owner_id,account_name,last_activity_days
+006001,Enterprise Deal - Acme Corp,Qualification,250000,2026-02-15,45,20,005001,Acme Corporation,12
+006002,Mid-Market - TechStart,Proposal,75000,2026-01-20,32,60,005002,TechStart Inc,3
+006003,SMB - LocalBiz,Negotiation,15000,2026-01-10,18,80,005003,LocalBiz LLC,1
+006004,Enterprise - GlobalCo,Qualification,500000,2026-03-01,67,10,005001,GlobalCo Industries,28
+006005,Mid-Market - InnovateTech,Closed Won,120000,2025-12-28,0,100,005004,InnovateTech Solutions,0
+006006,Enterprise - MegaCorp,Proposal,380000,2026-02-10,41,50,005002,MegaCorp Ltd,15
+006007,SMB - QuickServe,Qualification,22000,2026-01-25,29,30,005005,QuickServe Co,8
+006008,Mid-Market - DataDriven,Negotiation,95000,2026-01-15,12,75,005003,DataDriven Analytics,2
+006009,Enterprise - FortuneCo,Closed Lost,450000,2025-12-20,0,0,005001,FortuneCo,45
+006010,SMB - StartupHub,Proposal,18000,2026-01-18,25,55,005006,StartupHub,5
+006011,Mid-Market - CloudFirst,Qualification,88000,2026-02-05,52,25,005004,CloudFirst Systems,19
+006012,Enterprise - IndustryLeader,Negotiation,620000,2026-01-30,8,85,005002,IndustryLeader Corp,1
+006013,SMB - LocalRetail,Qualification,12000,2026-01-22,38,15,005005,LocalRetail Group,22
+006014,Mid-Market - SaasPro,Proposal,105000,2026-01-28,21,65,005003,SaasPro Inc,4
+006015,Enterprise - GlobalTech,Qualification,550000,2026-03-15,71,5,005001,GlobalTech Industries,35
+006016,SMB - SmallBiz,Negotiation,16000,2026-01-12,15,70,005006,SmallBiz Solutions,2
+006017,Mid-Market - ScaleUp,Closed Won,92000,2025-12-30,0,100,005004,ScaleUp Ventures,0
+006018,Enterprise - MajorPlayer,Proposal,480000,2026-02-20,44,45,005002,MajorPlayer Ltd,17
+006019,SMB - QuickGrow,Qualification,19000,2026-01-27,31,28,005005,QuickGrow Co,11
+006020,Mid-Market - TechAdvance,Negotiation,110000,2026-01-17,10,78,005003,TechAdvance Systems,1
+006021,Enterprise - LeadingEdge,Qualification,590000,2026-03-10,68,8,005001,LeadingEdge Corp,32
+006022,SMB - FastTrack,Proposal,14000,2026-01-20,27,52,005006,FastTrack Services,6
+006023,Mid-Market - CloudScale,Qualification,97000,2026-02-08,49,22,005004,CloudScale Solutions,20
+006024,Enterprise - TopTier,Negotiation,640000,2026-02-01,6,88,005002,TopTier Industries,1
+006025,SMB - LocalPro,Qualification,11000,2026-01-24,40,18,005005,LocalPro LLC,25
+006026,Mid-Market - DataFlow,Proposal,102000,2026-01-26,19,68,005003,DataFlow Analytics,3
+006027,Enterprise - PremierCo,Qualification,520000,2026-03-05,65,12,005001,PremierCo,30
+006028,SMB - QuickWin,Negotiation,17000,2026-01-14,13,72,005006,QuickWin Solutions,2
+006029,Mid-Market - InnovatePro,Closed Won,115000,2026-01-02,0,100,005004,InnovatePro Inc,0
+006030,Enterprise - EliteCorp,Proposal,510000,2026-02-18,42,48,005002,EliteCorp Ltd,16
+006031,SMB - GrowthPath,Qualification,13000,2026-01-23,35,20,005005,GrowthPath Co,14
+006032,Mid-Market - TechPioneer,Negotiation,108000,2026-01-19,9,76,005003,TechPioneer Systems,1
+006033,Enterprise - MarketLeader,Qualification,580000,2026-03-12,69,7,005001,MarketLeader Corp,33
+006034,SMB - RapidScale,Proposal,15000,2026-01-21,26,54,005006,RapidScale Services,5
+006035,Mid-Market - CloudMaster,Qualification,94000,2026-02-07,50,24,005004,CloudMaster Solutions,21
+006036,Enterprise - IndustryGiant,Negotiation,660000,2026-02-03,5,90,005002,IndustryGiant Inc,0
+006037,SMB - LocalLeader,Qualification,10000,2026-01-25,39,16,005005,LocalLeader LLC,24
+006038,Mid-Market - DataPro,Proposal,99000,2026-01-29,20,66,005003,DataPro Analytics,4
+006039,Enterprise - PremiumCo,Qualification,540000,2026-03-08,66,10,005001,PremiumCo,31
+006040,SMB - FastGrowth,Negotiation,18000,2026-01-16,11,74,005006,FastGrowth Solutions,1
+006041,Mid-Market - ScaleTech,Closed Won,118000,2026-01-04,0,100,005004,ScaleTech Ventures,0
+006042,Enterprise - TopChoice,Proposal,495000,2026-02-22,43,47,005002,TopChoice Ltd,18
+006043,SMB - QuickScale,Qualification,14000,2026-01-28,33,21,005005,QuickScale Co,13
+006044,Mid-Market - CloudEdge,Negotiation,112000,2026-01-20,8,79,005003,CloudEdge Systems,1
+006045,Enterprise - LeaderCorp,Qualification,570000,2026-03-14,70,6,005001,LeaderCorp Industries,34
+006046,SMB - GrowFast,Proposal,16000,2026-01-22,25,56,005006,GrowFast Services,5
+006047,Mid-Market - TechStream,Qualification,96000,2026-02-09,48,23,005004,TechStream Solutions,19
+006048,Enterprise - ElitePlayer,Negotiation,650000,2026-02-04,4,92,005002,ElitePlayer Inc,0
+006049,SMB - LocalChamp,Qualification,12000,2026-01-26,37,19,005005,LocalChamp LLC,23
+006050,Mid-Market - DataWave,Proposal,104000,2026-01-30,18,69,005003,DataWave Analytics,3
