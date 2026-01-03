@@ -47,19 +47,18 @@ async function renderTableauCloudViz(containerEl) {
     // Create web component
     const viz = document.createElement("tableau-viz");
     viz.id = "aasViz";
-    // Attributes must be set before appending or before src is set for best reliability
+
+    // Attributes - KEY FIX: Set these BEFORE appending
     viz.setAttribute("toolbar", "hidden");
     viz.setAttribute("hide-tabs", "");
+    viz.setAttribute("src", vizUrl);  // Use setAttribute
+    viz.setAttribute("token", token); // Use setAttribute
 
     // Style it to fill container
     viz.style.width = '100%';
     viz.style.height = '100%';
 
     containerEl.appendChild(viz);
-
-    // Apply src + token
-    viz.src = vizUrl;
-    viz.token = token;
 
     // Add event listener for bi-directional context
     // Note: Using string 'firstinteractive' instead of TableauEventType for dynamic loading safety
