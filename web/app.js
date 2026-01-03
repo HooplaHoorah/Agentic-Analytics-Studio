@@ -109,6 +109,26 @@ async function checkStatus() {
             } else {
                 llmBadge.style.display = 'none';
             }
+
+            // Salesforce Status
+            const sfBadge = document.getElementById('sf-status');
+            if (data.salesforce_mode) {
+                sfBadge.style.display = 'inline-block';
+                const mode = data.salesforce_mode.toLowerCase();
+                if (mode === 'live') {
+                    sfBadge.textContent = 'SF: Live';
+                    sfBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                    sfBadge.style.color = '#10b981';
+                    sfBadge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+                    sfBadge.title = 'Salesforce: Connected (real API calls)';
+                } else {
+                    sfBadge.textContent = 'SF: Stub';
+                    sfBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+                    sfBadge.style.color = '#fbbf24';
+                    sfBadge.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+                    sfBadge.title = 'Salesforce: Stub mode (preview only). Set SALESFORCE_MODE=live to enable real API calls.';
+                }
+            }
         }
     } catch (e) {
         document.getElementById('api-status').textContent = 'API: OFFLINE';
