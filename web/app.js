@@ -109,6 +109,25 @@ async function checkStatus() {
             } else {
                 llmBadge.style.display = 'none';
             }
+
+            // SF Status
+            const sfBadge = document.getElementById('sf-status');
+            if (data.salesforce_mode) {
+                sfBadge.style.display = 'inline-block';
+                const isLive = data.salesforce_mode === 'live';
+                sfBadge.textContent = isLive ? 'SF: LIVE' : 'SF: STUB';
+                sfBadge.style.borderColor = isLive ? 'rgba(74, 222, 128, 0.4)' : 'rgba(255, 193, 7, 0.4)';
+                sfBadge.style.color = isLive ? '#4ade80' : '#ffd54f';
+                sfBadge.style.background = isLive ? 'rgba(74, 222, 128, 0.1)' : 'rgba(255, 193, 7, 0.1)';
+            }
+
+            // Version
+            const verBadge = document.getElementById('version-status');
+            if (data.version) {
+                verBadge.style.display = 'inline-block';
+                verBadge.textContent = `v: ${data.version.substring(0, 7)}`;
+                verBadge.title = `Build: ${data.version}`;
+            }
         }
     } catch (e) {
         document.getElementById('api-status').textContent = 'API: OFFLINE';
@@ -610,6 +629,49 @@ checkStatus();
 loadTableauView();
 setInterval(checkStatus, 15000);
 fetchContextActions();
+
+async function fetchPlays() {
+    try {
+        const res = await fetch(`${API_BASE}/plays`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const plays = data.plays || [];
+
+        if (plays.length === 0) return;
+
+        const select = document.getElementById('play-select');
+        if (!select) return;
+
+        const currentVal = select.value;
+        select.innerHTML = '';
+
+        plays.forEach(play => {
+            const id = play.id || play;
+            const label = play.label || id.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = label;
+            select.appendChild(opt);
+        });
+
+        if (plays.some(p => (p.id || p) === currentVal)) {
+            select.value = currentVal;
+        } else {
+            select.value = (plays[0].id || plays[0]);
+            currentPlay = select.value;
+            // Update button text
+            const playLabel = select.options[select.selectedIndex].text;
+            const runBtn = document.getElementById('run-pipeline-btn');
+            if (runBtn) runBtn.textContent = `Run ${playLabel}`;
+        }
+
+    } catch (e) {
+        console.warn("Failed to fetch plays, keeping fallback.", e);
+    }
+}
+
+fetchPlays();
 
 // Auto-start tour on first visit
 startTourIfNeeded();

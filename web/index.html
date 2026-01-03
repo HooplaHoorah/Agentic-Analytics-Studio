@@ -124,9 +124,14 @@
           📊 Impact
         </button>
         <span class="status-badge status-online" id="api-status">API: ONLINE</span>
+        <span class="status-badge" id="sf-status"
+          style="display:none; cursor:help; border: 1px solid rgba(255, 193, 7, 0.4); color: #ffd54f; background: rgba(255, 193, 7, 0.1);"
+          title="Salesforce Mode: Stub (Simulated) vs Live (Real Org)">SF: STUB</span>
         <span class="status-badge" id="llm-status"
           style="display:none; background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4);">LLM:
           --</span>
+        <span class="status-badge" id="version-status"
+          style="display:none; font-size: 0.75rem; opacity: 0.5; border:0; background:transparent; padding:0;"></span>
       </div>
     </header>
 
@@ -180,6 +185,7 @@
               <option value="churn">Churn Rescue</option>
               <option value="spend">Spend Anomaly</option>
               <option value="revenue">Revenue Forecasting</option>
+              <option value="customer_segmentation">Customer Segmentation</option>
             </select>
             <button class="btn btn-outline" id="run-pipeline-btn" aria-label="Run analysis for selected play">Run
               Pipeline Audit</button>
@@ -218,7 +224,7 @@
     </main>
   </div>
 
-  <script type="module" src="app.js?v=27"></script>
+  <script type="module" src="app.js?v=29"></script>
 
 
   <!-- AAS_TABLEAU_GUARD_V18: BEGIN -->

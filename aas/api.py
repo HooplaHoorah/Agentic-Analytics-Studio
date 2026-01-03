@@ -31,6 +31,7 @@ from .agents.pipeline_leakage import PipelineLeakageAgent
 from .agents.churn_rescue import ChurnRescueAgent
 from .agents.spend_anomaly import SpendAnomalyAgent
 from .agents.revenue_forecasting import RevenueForecastingAgent
+from .agents.customer_segmentation import CustomerSegmentationAgent
 from .executor import execute_actions
 from .services.tableau_client import TableauClient
 
@@ -118,6 +119,7 @@ AGENTS = {
     "churn": ChurnRescueAgent,
     "spend": SpendAnomalyAgent,
     "revenue": RevenueForecastingAgent,
+    "customer_segmentation": CustomerSegmentationAgent,
 }
 
 
@@ -146,7 +148,9 @@ def _append_approval_log(record: Dict[str, Any]) -> None:
 def health():
     return {
         "status": "ok", 
-        "llm_provider": os.getenv("LLM_PROVIDER", "none").lower()
+        "llm_provider": os.getenv("LLM_PROVIDER", "none").lower(),
+        "salesforce_mode": "live" if os.getenv("SF_USERNAME") else "stub",
+        "version": os.getenv("GIT_SHA", "dev-build")
     }
 
 
