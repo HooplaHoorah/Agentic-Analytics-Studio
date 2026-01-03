@@ -4,7 +4,7 @@
  */
 
 import Shepherd from 'shepherd.js';
-import 'shepherd.js/dist/css/shepherd.css';
+// import 'shepherd.js/dist/css/shepherd.css'; // Moved to index.html <link>
 
 // Tour configuration
 const TOUR_STORAGE_KEY = 'aas_tour_completed';
