@@ -365,6 +365,26 @@ function renderActions(actions, activeFilters = null) {
                 </div>
             ` : ''}
 
+            ${action.type === 'slack_message' ? `
+                <button class="preview-toggle" onclick="this.nextElementSibling.classList.toggle('visible')">👁️ Preview Block Kit</button>
+                <div class="slack-preview">
+                    <div class="slack-header">
+                        <img src="https://a.slack-edge.com/80588/img/plugins/app/service_36.png" alt="App Icon">
+                        <span>Agentic Bot</span>
+                        <span style="background:#3f4144; font-size:0.6rem; padding:1px 3px; border-radius:2px; color:#ccc;">APP</span>
+                    </div>
+                    <div style="border-left: 3px solid #ccc; padding-left: 8px; margin-bottom: 8px;">
+                        <div style="font-weight:bold; color:#e1e1e1; margin-bottom:2px;">🚨 ${action.title}</div>
+                        <div style="color:#ccc;">${action.description}</div>
+                        <div style="margin-top:4px; font-size:0.75rem; color:#888;">Impact Value: <b>$${(action.impact_score || 0).toLocaleString()}</b></div>
+                    </div>
+                    <div>
+                        <span class="slack-btn-mock">Approve</span>
+                        <span class="slack-btn-mock danger">Decline</span>
+                    </div>
+                </div>
+            ` : ''}
+
             <div style="display:flex; gap: 0.5rem; margin-top: 1rem;">
                 <button class="btn btn-outline ignore-btn" data-index="${index}" style="flex:1; padding: 0.4rem; font-size: 0.75rem;">Ignore</button>
                 <button class="btn btn-primary approve-single" data-index="${index}" style="flex:1; padding: 0.4rem; font-size: 0.75rem;">Approve</button>
@@ -577,6 +597,27 @@ async function exportImpactReport(format = 'csv') {
     }
 }
 
+function showToast(message) {
+    let container = document.querySelector('.toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = `<span>✅</span> <span>${message}</span>`;
+
+    container.appendChild(toast);
+
+    // Remove after 3s
+    setTimeout(() => {
+        toast.style.animation = 'slideUp 0.3s ease-in reverse';
+        setTimeout(() => toast.remove(), 290);
+    }, 3000);
+}
+
 // Wire up impact dashboard buttons
 const viewImpactBtn = document.getElementById('view-impact-btn');
 if (viewImpactBtn) {
@@ -590,7 +631,18 @@ if (toggleImpactBtn) {
 
 const exportImpactBtn = document.getElementById('export-impact-btn');
 if (exportImpactBtn) {
-    exportImpactBtn.addEventListener('click', () => exportImpactReport('csv'));
+    exportImpactBtn.addEventListener('click', () => {
+        exportImpactReport('csv');
+        // Minor delay to simulate generation if instant, providing visual feedback
+        setTimeout(() => showToast('Impact report exported successfully'), 500);
+    });
+}
+
+const tableauOverviewBtn = document.getElementById('tableau-overview-btn');
+if (tableauOverviewBtn) {
+    tableauOverviewBtn.addEventListener('click', () => {
+        window.open(TABLEAU_PUBLIC_DEFAULT_URL, '_blank');
+    });
 }
 
 

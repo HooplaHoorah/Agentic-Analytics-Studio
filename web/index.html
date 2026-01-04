@@ -123,10 +123,11 @@
         <button class="btn btn-outline btn-sm" id="view-impact-btn" title="View impact dashboard">
           📊 Impact
         </button>
-        <span class="status-badge status-online" id="api-status">API: ONLINE</span>
+        <span class="status-badge status-online" id="api-status" data-tooltip="Slack Mode: Stub (Simulated)">API:
+          ONLINE</span>
         <span class="status-badge" id="sf-status"
           style="display:none; cursor:help; border: 1px solid rgba(255, 193, 7, 0.4); color: #ffd54f; background: rgba(255, 193, 7, 0.1);"
-          title="Salesforce Mode: Stub (Simulated) vs Live (Real Org)">SF: STUB</span>
+          data-tooltip="Salesforce Mode: Stub (Simulated) - No real tasks created">SF: STUB</span>
         <span class="status-badge" id="llm-status"
           style="display:none; background: rgba(139, 92, 246, 0.2); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.4);">LLM:
           --</span>
@@ -141,6 +142,9 @@
       <div class="impact-header">
         <h2 id="impact-title" style="font-size: 1.125rem; font-weight: 600; margin: 0;">📊 Impact Dashboard</h2>
         <div style="display: flex; gap: 0.5rem;">
+          <button class="btn btn-outline btn-sm" id="tableau-overview-btn" aria-label="View Executive Tableau Overview">
+            📊 View Tableau Overview
+          </button>
           <button class="btn btn-outline btn-sm" id="export-impact-btn" aria-label="Export impact report">
             📥 Export Report
           </button>

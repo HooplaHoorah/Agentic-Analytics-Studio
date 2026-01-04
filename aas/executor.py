@@ -50,12 +50,25 @@ def execute_actions(actions: List[Dict[str, Any]], run_id: str | None = None) ->
                 if sf_client:
                     try:
                         # Attempt real call if implemented
-                        res = sf_client.create_task(
+                        payload = dict(
                             subject=metadata.get("subject", "AAS Follow-up"),
                             description=action.get("description", ""),
                             owner_id=metadata.get("owner", "default"),
                             what_id=metadata.get("opportunity_id", "")
                         )
+                        
+                        # --- DEMO STUB WRITER START ---
+                        # Write what we WOULD have sent to SFDC
+                        try:
+                            import json
+                            os.makedirs("/tmp", exist_ok=True)
+                            with open("/tmp/sf_last_task.json", "w") as f:
+                                json.dump(payload, f, indent=2)
+                        except Exception as e:
+                            logger.warning(f"Failed to write SF stub file: {e}")
+                        # --- DEMO STUB WRITER END ---
+
+                        res = sf_client.create_task(**payload)
                         result["details"] = res
                     except NotImplementedError:
                         result["status"] = "demo_success"
@@ -66,6 +79,22 @@ def execute_actions(actions: List[Dict[str, Any]], run_id: str | None = None) ->
                     
             elif action_type == "slack_message":
                 if slack_client:
+                    # --- DEMO STUB WRITER START ---
+                    try:
+                        import json
+                        os.makedirs("/tmp", exist_ok=True)
+                        stub_data = {
+                            "channel": metadata.get("channel", "#general"),
+                            "text": metadata.get("text", action.get("description", "")),
+                            "action_title": action.get("title"),
+                            "timestamp": datetime.now().isoformat()
+                        }
+                        with open("/tmp/slack_last_message.json", "w") as f:
+                            json.dump(stub_data, f, indent=2)
+                    except Exception as e:
+                        logger.warning(f"Failed to write Slack stub file: {e}")
+                    # --- DEMO STUB WRITER END ---
+
                     res = slack_client.send_message(
                         channel=metadata.get("channel", "#general"),
                         text=metadata.get("text", action.get("description", ""))

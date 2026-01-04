@@ -192,22 +192,93 @@ export function createTour() {
         ]
     });
 
-    // Step 6: Approve Actions
+    // Step 6: Slack Preview (New)
     tour.addStep({
-        id: 'approve-actions',
-        title: '✅ One-Click Execution',
+        id: 'slack-preview',
+        title: '💬 Slack Preview',
         text: `
-      <p>Approve actions to execute them automatically:</p>
-      <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-        <li><strong>With Salesforce:</strong> Creates real tasks</li>
-        <li><strong>Without Salesforce:</strong> Safe stub mode</li>
-        <li><strong>Slack:</strong> Instant notifications (if configured)</li>
-      </ul>
-      <p style="margin-top: 0.5rem;">All actions are logged for audit trails.</p>
+      <p>Hover or click <strong>Preview</strong> on Slack actions to see the exact Block Kit message.</p>
+      <p>This ensures you know exactly what your team will see before you approve.</p>
     `,
         attachTo: {
-            element: '#approve-all-btn',
-            on: 'top'
+            element: '#actions-list',
+            on: 'left'
+        },
+        buttons: [
+            {
+                text: 'Back',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Next',
+                action: tour.next
+            }
+        ]
+    });
+
+    // Step 7: Stub/Live Badge (New)
+    tour.addStep({
+        id: 'stub-mode',
+        title: '🛡️ Enterprise Safety: Stub Mode',
+        text: `
+      <p>Hover over this badge to check your connection mode.</p>
+      <p><strong>Stub Mode:</strong> Simulates actions safely (great for demos).</p>
+      <p><strong>Live Mode:</strong> Executes real tasks in Salesforce.</p>
+    `,
+        attachTo: {
+            element: '#sf-status',
+            on: 'bottom'
+        },
+        buttons: [
+            {
+                text: 'Back',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Next',
+                action: tour.next
+            }
+        ]
+    });
+
+    // Step 8: Impact Dashboard & Export (New)
+    tour.addStep({
+        id: 'impact-dashboard',
+        title: '📈 Impact & Audit Support',
+        text: `
+      <p>Open the <strong>Impact Dashboard</strong> to see ROI rollups.</p>
+      <p>Use <strong>Export Report</strong> to download a CSV/JSON audit trail for compliance.</p>
+    `,
+        attachTo: {
+            element: '#view-impact-btn',
+            on: 'bottom'
+        },
+        buttons: [
+            {
+                text: 'Back',
+                action: tour.back,
+                classes: 'shepherd-button-secondary'
+            },
+            {
+                text: 'Next',
+                action: tour.next
+            }
+        ]
+    });
+
+    // Step 9: Tableau Overview (New)
+    tour.addStep({
+        id: 'tableau-overview',
+        title: '🌐 Executive Overview',
+        text: `
+      <p>Need the big picture?</p>
+      <p>Click <strong>View Tableau Overview</strong> in the Impact Dashboard to open the full executive report on Tableau Public.</p>
+    `,
+        attachTo: {
+            element: '#view-impact-btn', // Attached to the same area since the new button is inside the dashboard which might be closed
+            on: 'bottom'
         },
         buttons: [
             {
