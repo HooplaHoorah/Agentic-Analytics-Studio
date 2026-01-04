@@ -264,6 +264,11 @@ h1 {
   box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
 }
 
+.play-select option {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+}
+
 .actions-footer {
   margin-top: auto;
   padding: 1rem 1.5rem;
