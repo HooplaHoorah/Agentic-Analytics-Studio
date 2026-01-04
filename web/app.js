@@ -392,17 +392,29 @@ function renderActions(actions, activeFilters = null) {
         `;
         actionsList.appendChild(card);
 
-        // Make the entire card clickable: open the embed_url (if available) in a new tab.
-        // Ignore clicks on buttons to prevent interference with approve/ignore actions.
-        const embedUrl = (action.metadata && action.metadata.embed_url) || action.embed_url;
-        if (embedUrl) {
-            card.style.cursor = 'pointer';
-            card.addEventListener('click', (ev) => {
-                // If a button inside the card was clicked, do nothing.
-                if (ev.target.closest('button')) return;
+        // Make the entire card clickable...
+        // ...but handle Slack cards differently by toggling preview
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', (ev) => {
+            // If a button inside the card was clicked, do nothing.
+            if (ev.target.closest('button')) return;
+
+            if (action.type === 'slack_message') {
+                const preview = card.querySelector('.slack-preview');
+                if (preview) {
+                    preview.classList.toggle('visible');
+                    // Optional: swap button text if we had a direct ref, 
+                    // but the simple toggle is sufficient UX.
+                }
+                return;
+            }
+
+            // Default behavior for other cards (Salesforce, etc)
+            const embedUrl = (action.metadata && action.metadata.embed_url) || action.embed_url;
+            if (embedUrl) {
                 window.open(embedUrl, '_blank');
-            });
-        }
+            }
+        });
     });
 
     // Wire buttons
