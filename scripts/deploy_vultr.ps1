@@ -31,33 +31,57 @@ foreach ($file in $FilesToDeploy) {
 
 # 2. Configure Environment (Secrets)
 Write-Host "Configuring secrets in /etc/aas/aas.env..."
+# Try to read local .env file
+$EnvFile = "$PSScriptRoot/../.env"
+if (Test-Path $EnvFile) {
+    Write-Host "Reading secrets from .env..."
+    $EnvLines = Get-Content $EnvFile
+    foreach ($line in $EnvLines) {
+        if ($line -match "^([^#=]+)=(.*)$") {
+            $name = $matches[1].Trim()
+            $value = $matches[2].Trim()
+            # Remove quotes if present
+            $value = $value -replace '^"|"$', ''
+            [Environment]::SetEnvironmentVariable($name, $value, "Process")
+        }
+    }
+}
+
+# Verify Critical Vars
+$RequiredVars = @("DATABASE_URL", "TABLEAU_TOKEN_SECRET", "SLACK_BOT_TOKEN", "OPENAI_API_KEY")
+foreach ($var in $RequiredVars) {
+    if (-not (Get-Item "Env:\$var" -ErrorAction SilentlyContinue)) {
+        Write-Warning "Missing variable: $var (Script may fail on server if needed)"
+    }
+}
+
 $EnvContent = @"
-DATABASE_URL="postgresql://vultradmin:AVNS_1Z4yRiK79Yz3CDRzoFH@vultr-prod-38e84cab-c270-41d6-abee-23155df25ebd-vultr-prod-795c.vultrdb.com:16751/defaultdb"
-TABLEAU_SERVER_URL="https://10ax.online.tableau.com"
-TABLEAU_SITE_ID="agenticanalyticsstudio"
-TABLEAU_TOKEN_NAME="aas_backend"
-TABLEAU_TOKEN_SECRET="MYH8mqkASDCib/1+JsFCuw==:MZrOsK1z1LxovjNpP5GY9VAO6k3GNIrW"
-TABLEAU_CONNECTED_APP_CLIENT_ID="842b6911-a5f5-4555-a3a5-8e344e656e18"
-TABLEAU_CONNECTED_APP_SECRET_ID="ce7f5e90-4e90-4a12-8f78-71309404ca14"
-TABLEAU_CONNECTED_APP_SECRET_VALUE="oJw/+UBTRDfkkv6AYquSyYLPZEntizwQWQxqGkeWmgE="
-TABLEAU_CONNECTED_APP_USERNAME="hooplahoorah@gmail.com"
-SLACK_BOT_TOKEN="xoxb-10168181986657-10162823619317-uqtFSrPzTzX9KX3BJeqdOVNw"
-TABLEAU_VIZ_URL_CLOUD="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
-TABLEAU_VIZ_URL_PIPELINE="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
-TABLEAU_VIZ_URL_CHURN="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
-TABLEAU_VIZ_URL_SPEND="https://10ax.online.tableau.com/t/agenticanalyticsstudio/views/AAS_Live_Data/Sheet1?:showVizHome=no&:embed=yes"
+DATABASE_URL="$($env:DATABASE_URL)"
+TABLEAU_SERVER_URL="$($env:TABLEAU_SERVER_URL)"
+TABLEAU_SITE_ID="$($env:TABLEAU_SITE_ID)"
+TABLEAU_TOKEN_NAME="$($env:TABLEAU_TOKEN_NAME)"
+TABLEAU_TOKEN_SECRET="$($env:TABLEAU_TOKEN_SECRET)"
+TABLEAU_CONNECTED_APP_CLIENT_ID="$($env:TABLEAU_CONNECTED_APP_CLIENT_ID)"
+TABLEAU_CONNECTED_APP_SECRET_ID="$($env:TABLEAU_CONNECTED_APP_SECRET_ID)"
+TABLEAU_CONNECTED_APP_SECRET_VALUE="$($env:TABLEAU_CONNECTED_APP_SECRET_VALUE)"
+TABLEAU_CONNECTED_APP_USERNAME="$($env:TABLEAU_CONNECTED_APP_USERNAME)"
+SLACK_BOT_TOKEN="$($env:SLACK_BOT_TOKEN)"
+TABLEAU_VIZ_URL_CLOUD="$($env:TABLEAU_VIZ_URL_CLOUD)"
+TABLEAU_VIZ_URL_PIPELINE="$($env:TABLEAU_VIZ_URL_PIPELINE)"
+TABLEAU_VIZ_URL_CHURN="$($env:TABLEAU_VIZ_URL_CHURN)"
+TABLEAU_VIZ_URL_SPEND="$($env:TABLEAU_VIZ_URL_SPEND)"
 
 # AI / LLM Configuration
-LLM_PROVIDER="openai"
-OPENAI_API_KEY="sk-proj-c028cVjaolgXS9CjYdsZYVlK2Vul6RNOrwXHwmgoH6wTpI-lmg-Wofn6ILCNNRP4vckiBVxW8JT3BlbkFJrQAlW8lBgNlmD6w3gPrcacZ6tgEyo7pW72HWIfwCuxvgA"
-OLLAMA_BASE_URL="http://localhost:11434/api"
-OLLAMA_MODEL="llama3"
+LLM_PROVIDER="$($env:LLM_PROVIDER)"
+OPENAI_API_KEY="$($env:OPENAI_API_KEY)"
+OLLAMA_BASE_URL="$($env:OLLAMA_BASE_URL)"
+OLLAMA_MODEL="$($env:OLLAMA_MODEL)"
 
-# Salesforce Configuration (Empty SF_USERNAME triggers Mock Mode)
-SF_USERNAME=""
-SF_PASSWORD=""
-SF_SECURITY_TOKEN=""
-SF_DOMAIN="login"
+# Salesforce Configuration
+SF_USERNAME="$($env:SF_USERNAME)"
+SF_PASSWORD="$($env:SF_PASSWORD)"
+SF_SECURITY_TOKEN="$($env:SF_SECURITY_TOKEN)"
+SF_DOMAIN="$($env:SF_DOMAIN)"
 "@
 
 # Write env file safely (using specific echo to avoid pipe issues with special chars if any, but simplistic here)
