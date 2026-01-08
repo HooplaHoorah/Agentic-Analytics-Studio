@@ -10,6 +10,20 @@ venv/
 # Environment variables / secrets
 .env
 
+# Backup and sensitive environment files
+temp_env_backup
+*env*backup*
+*.bak
+*.tmp
+*.tar.gz
+
+# Remove status and instruction artefacts
+STATUS_*.md
+read_inst*.txt
+
+# Exclude large or generated bundles and instructions
+instructions\ for\ Antigravity/
+
 # IDE files
 .idea/
 .vscode/

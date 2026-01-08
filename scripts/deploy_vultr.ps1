@@ -1,6 +1,13 @@
 
 $ErrorActionPreference = "Stop"
-$TargetHost = "root@66.135.1.215"
+$TargetHost = $env:TARGET_HOST
+# The target host should be provided via the TARGET_HOST environment variable
+# rather than hard‑coding an IP address. This avoids committing
+# sensitive server addresses into source control. Example:
+#   $env:TARGET_HOST = "root@your.server.com"
+if (-not $TargetHost) {
+    throw "TARGET_HOST environment variable must be set to your deployment server, e.g. 'root@hostname'"
+}
 
 Write-Host "Deploying to Vultr..."
 
